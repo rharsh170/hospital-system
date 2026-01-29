@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pharmacy Admin Dashboard</h2>
+{% if pharmacy %}
+    <p>Pharmacy: {{ pharmacy.name }} - {{ pharmacy.city }}</p>
+
+    <h3>Medicines</h3>
+    <ul>
+        {% for m in medicines %}
+            <li>{{ m.name }} - Stock: {{ m.stock }} - ₹{{ m.price }}</li>
+        {% empty %}
+            <li>No medicines configured.</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Recent Orders</h3>
+    <ul>
+        {% for o in orders %}
+            <li>Order #{{ o.id }} from {{ o.patient.username }} ({{ o.status }})</li>
+        {% empty %}
+            <li>No orders yet.</li>
+        {% endfor %}
+    </ul>
+    <p>Use Django admin to manage medicines and order statuses.</p>
+{% else %}
+    <p>No pharmacy profile linked to this user. Configure via admin.</p>
+{% endif %}
+{% endblock %}
+

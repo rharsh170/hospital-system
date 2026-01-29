@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Search Doctors</h2>
+<form method="get" class="form-inline">
+    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
+    <select name="speciality">
+        <option value="">All Specialities</option>
+        <option value="Cardiology" {% if selected_speciality == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+        <option value="Neurology" {% if selected_speciality == 'Neurology' %}selected{% endif %}>Neurology</option>
+        <option value="Orthopedics" {% if selected_speciality == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
+        <option value="General" {% if selected_speciality == 'General' %}selected{% endif %}>General Physician</option>
+    </select>
+    <button type="submit" class="btn">Search</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Speciality</th>
+            <th>Hospital</th>
+            <th>City</th>
+            <th>Fee</th>
+            <th>Languages</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in doctors %}
+        <tr>
+            <td>{{ d.name }}</td>
+            <td>{{ d.speciality }}</td>
+            <td>{{ d.hospital.name }}</td>
+            <td>{{ d.city }}</td>
+            <td>₹{{ d.consultation_fee }}</td>
+            <td>{{ d.languages_spoken }}</td>
+            <td><a href="{% url 'doctor_detail' d.id %}" class="btn-small">Details</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No doctors found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Dr. {{ doctor.name }}</h2>
+<p>Speciality: {{ doctor.speciality }}</p>
+<p>Hospital: {{ doctor.hospital.name }}</p>
+<p>City: {{ doctor.city }}</p>
+<p>Experience: {{ doctor.experience_years }} years</p>
+<p>Consultation Fee: ₹{{ doctor.consultation_fee }}</p>
+<p>Availability: {{ doctor.available_from }} - {{ doctor.available_to }}</p>
+<p>Languages: {{ doctor.languages_spoken }}</p>
+
+{% if user.is_authenticated and current_role == 'PATIENT' %}
+    <a href="{% url 'book_appointment' doctor.id %}" class="btn">Book Appointment</a>
+{% else %}
+    <p>Login as patient to book an appointment.</p>
+{% endif %}
+{% endblock %}
+

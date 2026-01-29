@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Hospital Admin Dashboard</h2>
+
+<h3>Your Hospitals</h3>
+<ul>
+    {% for h in hospitals %}
+        <li><a href="{% url 'hospital_detail' h.id %}">{{ h.name }}</a> - {{ h.city }} (Rating: {{ h.rating }})</li>
+    {% empty %}
+        <li>No hospitals configured yet.</li>
+    {% endfor %}
+</ul>
+
+<h3>Recent Appointments</h3>
+<ul>
+    {% for a in appointments %}
+        <li>{{ a.date }} {{ a.time_slot }} - {{ a.patient.username }} with Dr. {{ a.doctor.name }} ({{ a.status }})</li>
+    {% empty %}
+        <li>No appointments.</li>
+    {% endfor %}
+</ul>
+<p>Use Django admin to manage hospital beds and doctors.</p>
+{% endblock %}
+

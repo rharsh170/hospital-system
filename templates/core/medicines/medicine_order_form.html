@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Order Medicine</h2>
+<p>Medicine: {{ medicine.name }}</p>
+<p>Pharmacy: {{ medicine.pharmacy.name }} ({{ medicine.pharmacy.city }})</p>
+<p>Price: ₹{{ medicine.price }}</p>
+<p>Available stock: {{ medicine.stock }}</p>
+
+<form method="post" class="form">
+    {% csrf_token %}
+    {{ item_form.as_p }}
+    <button type="submit" class="btn">Place Order</button>
+</form>
+{% endblock %}
+

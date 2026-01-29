@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Book Oxygen Cylinders</h2>
+<p>Supplier: {{ stock.supplier.name }} ({{ stock.capacity_litres }}L)</p>
+<p>Price per cylinder: ₹{{ stock.price_per_cylinder }}</p>
+<p>Available: {{ stock.available_cylinders }}</p>
+
+<form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Book</button>
+</form>
+{% endblock %}
+

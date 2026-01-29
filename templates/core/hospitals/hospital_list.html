@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Hospital Bed Availability</h2>
+
+<form method="get" class="form-inline">
+    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
+    <select name="bed_type">
+        <option value="">All Bed Types</option>
+        <option value="ICU" {% if selected_bed_type == 'ICU' %}selected{% endif %}>ICU</option>
+        <option value="GENERAL" {% if selected_bed_type == 'GENERAL' %}selected{% endif %}>General</option>
+        <option value="EMERGENCY" {% if selected_bed_type == 'EMERGENCY' %}selected{% endif %}>Emergency</option>
+    </select>
+    <input type="number" name="min_rating" step="0.1" min="0" max="5" placeholder="Min Rating" value="{{ selected_min_rating }}">
+    <button type="submit" class="btn">Filter</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Hospital</th>
+            <th>City</th>
+            <th>Rating</th>
+            <th>Bed Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="hospital-table-body">
+        {% for h in hospitals %}
+        <tr>
+            <td>{{ h.name }}</td>
+            <td>{{ h.city }}</td>
+            <td>{{ h.rating }}</td>
+            <td>
+                {% for b in h.beds.all %}
+                    <div>{{ b.bed_type }}: {{ b.available_beds }}/{{ b.total_beds }}</div>
+                {% empty %}
+                    <div>No bed data</div>
+                {% endfor %}
+            </td>
+            <td><a href="{% url 'hospital_detail' h.id %}" class="btn-small">Details</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No hospitals found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p class="small-text">This table auto-refreshes every 30 seconds to reflect near real-time bed availability.</p>
+
+<script>
+    function refreshBeds() {
+        const params = new URLSearchParams(window.location.search);
+        fetch("{% url 'hospital_list' %}?" + params.toString(), {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        }).then(r => r.json())
+         .then(data => {
+            const body = document.getElementById('hospital-table-body');
+            body.innerHTML = '';
+            data.hospitals.forEach(h => {
+                const tr = document.createElement('tr');
+                const bedsHtml = h.beds.map(b => `${b.bed_type}: ${b.available_beds}/${b.total_beds}`).join('<br>');
+                tr.innerHTML = `
+                    <td>${h.name}</td>
+                    <td>${h.city}</td>
+                    <td>${h.rating}</td>
+                    <td>${bedsHtml}</td>
+                    <td><span class="btn-small disabled">Details</span></td>`;
+                body.appendChild(tr);
+            });
+        });
+    }
+    setInterval(refreshBeds, 30000);
+</script>
+{% endblock %}
+

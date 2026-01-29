@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Search Essential Medicines</h2>
+<form method="get" class="form-inline">
+    <input type="text" name="name" placeholder="Medicine name" value="{{ selected_name }}">
+    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
+    <button type="submit" class="btn">Search</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Medicine</th>
+            <th>Pharmacy</th>
+            <th>City</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Essential</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in medicines %}
+        <tr>
+            <td>{{ m.name }}</td>
+            <td>{{ m.pharmacy.name }}</td>
+            <td>{{ m.pharmacy.city }}</td>
+            <td>₹{{ m.price }}</td>
+            <td>{{ m.stock }}</td>
+            <td>{{ m.is_essential|yesno:"Yes,No" }}</td>
+            <td>
+                {% if user.is_authenticated and current_role == 'PATIENT' and m.stock > 0 %}
+                    <a href="{% url 'medicine_order_create' m.id %}" class="btn-small">Order</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No medicines found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+

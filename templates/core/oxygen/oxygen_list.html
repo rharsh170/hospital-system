@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Oxygen Cylinder Availability</h2>
+
+<form method="get" class="form-inline">
+    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
+    <button type="submit" class="btn">Filter</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Supplier</th>
+            <th>City</th>
+            <th>Contact</th>
+            <th>Delivery</th>
+            <th>Stocks</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in suppliers %}
+        <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.city }}</td>
+            <td>{{ s.contact_phone }}</td>
+            <td>{{ s.delivery_available|yesno:"Yes,No" }}</td>
+            <td>
+                {% for st in s.stocks.all %}
+                    <div>
+                        {{ st.capacity_litres }}L - ₹{{ st.price_per_cylinder }} -
+                        {{ st.available_cylinders }} available
+                        {% if user.is_authenticated and current_role == 'PATIENT' and st.available_cylinders > 0 %}
+                            <a href="{% url 'oxygen_booking_create' st.id %}" class="btn-small">Book</a>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div>No stocks.</div>
+                {% endfor %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No suppliers found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Welcome to CURA</h1>
+<p>Hospital Resource Availability and Healthcare Assistance Platform.</p>
+
+<div class="grid">
+    <div class="card">
+        <h3>Hospitals</h3>
+        <p>{{ hospitals_count }} registered hospitals.</p>
+        <a href="{% url 'hospital_list' %}" class="btn">View Bed Availability</a>
+    </div>
+    <div class="card">
+        <h3>Doctors</h3>
+        <p>{{ doctors_count }} doctors available.</p>
+        <a href="{% url 'doctor_search' %}" class="btn">Search Doctors</a>
+    </div>
+    <div class="card">
+        <h3>Medicines</h3>
+        <p>{{ medicines_count }} medicines.</p>
+        <a href="{% url 'medicine_search' %}" class="btn">Search Medicines</a>
+    </div>
+    <div class="card">
+        <h3>Oxygen Suppliers</h3>
+        <p>{{ oxygen_suppliers_count }} suppliers.</p>
+        <a href="{% url 'oxygen_list' %}" class="btn">View Oxygen Availability</a>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="card">
+        <h3>Your Dashboard</h3>
+        <p>Access your personalized CURA dashboard.</p>
+        <a href="{% url 'dashboard' %}" class="btn">Go to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ hospital.name }}</h2>
+<p>{{ hospital.address }}, {{ hospital.city }}, {{ hospital.state }}</p>
+<p>Rating: {{ hospital.rating }}</p>
+<p>Contact: {{ hospital.contact_phone }} | Emergency: {{ hospital.emergency_contact }}</p>
+<p>24/7 Support: {{ hospital.support_24_7|yesno:"Yes,No" }}</p>
+
+<h3>Bed Availability</h3>
+<ul>
+    {% for b in beds %}
+        <li>{{ b.bed_type }}: {{ b.available_beds }}/{{ b.total_beds }}</li>
+    {% empty %}
+        <li>No bed information.</li>
+    {% endfor %}
+</ul>
+
+<h3>Doctors</h3>
+<ul>
+    {% for d in doctors %}
+        <li><a href="{% url 'doctor_detail' d.id %}">{{ d.name }}</a> - {{ d.speciality }}</li>
+    {% empty %}
+        <li>No doctors registered.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
+

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-overlay">
+    <div class="auth-card">
+        <h2>Welcome to CURA</h2>
+        <p class="auth-subtitle">Sign in to access your healthcare dashboard.</p>
+        <form method="post" class="form auth-form">
+            {% csrf_token %}
+            <p>
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </p>
+            <p>
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </p>
+            <button type="submit" class="btn btn-primary auth-btn">Login</button>
+        </form>
+        <p class="auth-footer">
+            New here?
+            <a href="{% url 'register' %}">Create a patient account</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+

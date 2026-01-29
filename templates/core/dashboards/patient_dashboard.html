@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="dashboard-hero">
+    <div class="dashboard-hero-main">
+        <h2>Your CURA health hub</h2>
+        <p class="dashboard-hero-subtitle">
+            Quickly jump to appointments, medicines, oxygen bookings, and more from one place.
+        </p>
+        <div class="dashboard-quick-actions">
+            <a href="{% url 'doctor_search' %}" class="btn btn-primary">Book a doctor</a>
+            <a href="{% url 'hospital_list' %}" class="btn btn-outline">Find hospital beds</a>
+            <a href="{% url 'medicine_search' %}" class="btn btn-outline">Order medicines</a>
+        </div>
+    </div>
+    <div class="dashboard-hero-visual">
+        <img src="{% static 'img/dashboard-hero.svg' %}" alt="Dashboard overview" class="dashboard-hero-image">
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <section class="dash-card">
+        <div class="dash-card-header">
+            <h3>Upcoming appointments</h3>
+            <span class="pill-status">
+                {% if appointments %}{{ appointments|length }} scheduled{% else %}None yet{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for a in appointments %}
+                <li>
+                    <span class="dash-list-main">Dr. {{ a.doctor.name }} • {{ a.date }} {{ a.time_slot }}</span>
+                    <span class="dash-list-meta">{{ a.status }}</span>
+                </li>
+            {% empty %}
+                <li class="dash-empty">No upcoming appointments. Book one now from the quick actions above.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="dash-card">
+        <div class="dash-card-header">
+            <h3>Recent medicine orders</h3>
+            <span class="pill-status">
+                {% if medicine_orders %}{{ medicine_orders|length }} recent{% else %}No orders{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for o in medicine_orders %}
+                <li>
+                    <span class="dash-list-main">Order #{{ o.id }} • {{ o.pharmacy.name }}</span>
+                    <span class="dash-list-meta">{{ o.status }}</span>
+                </li>
+            {% empty %}
+                <li class="dash-empty">You haven’t placed any medicine orders yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="dash-card">
+        <div class="dash-card-header">
+            <h3>Oxygen bookings</h3>
+            <span class="pill-status">
+                {% if oxygen_bookings %}{{ oxygen_bookings|length }} recent{% else %}No bookings{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for b in oxygen_bookings %}
+                <li>
+                    <span class="dash-list-main">Booking #{{ b.id }} • {{ b.stock.supplier.name }}</span>
+                    <span class="dash-list-meta">{{ b.status }}</span>
+                </li>
+            {% empty %}
+                <li class="dash-empty">No oxygen bookings yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+
+<section class="dash-card dash-notifications">
+    <div class="dash-card-header">
+        <h3>Recent notifications</h3>
+    </div>
+    <ul class="dash-list">
+        {% for n in notifications %}
+            <li {% if not n.is_read %}class="dash-unread"{% endif %}>
+                <span class="dash-list-main">{{ n.message }}</span>
+                <span class="dash-list-meta">{{ n.created_at|date:"d M Y H:i" }}</span>
+            </li>
+        {% empty %}
+            <li class="dash-empty">You’ll see appointment reminders, booking updates and more here.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}
+

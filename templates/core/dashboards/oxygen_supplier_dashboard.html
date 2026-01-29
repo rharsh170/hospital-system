@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Oxygen Supplier Dashboard</h2>
+{% if supplier %}
+    <p>Supplier: {{ supplier.name }} - {{ supplier.city }}</p>
+
+    <h3>Stocks</h3>
+    <ul>
+        {% for s in stocks %}
+            <li>{{ s.capacity_litres }}L - ₹{{ s.price_per_cylinder }} - Available: {{ s.available_cylinders }}</li>
+        {% empty %}
+            <li>No stocks configured.</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Recent Bookings</h3>
+    <ul>
+        {% for b in bookings %}
+            <li>#{{ b.id }} - {{ b.patient.username }} - {{ b.quantity }} cylinders on {{ b.scheduled_date }} ({{ b.status }})</li>
+        {% empty %}
+            <li>No bookings yet.</li>
+        {% endfor %}
+    </ul>
+    <p>Use Django admin to manage stocks and booking statuses.</p>
+{% else %}
+    <p>No oxygen supplier profile linked to this user. Configure via admin.</p>
+{% endif %}
+{% endblock %}
+
