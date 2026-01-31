@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-overlay">
+    <div class="auth-card" style="max-width: 500px;">
+        <h2>Book a {{ bed.get_bed_type_display }} Bed</h2>
+        <p class="auth-subtitle">at {{ bed.hospital.name }}</p>
+
+        <div class="card card-muted" style="margin-bottom: 20px;">
+            <p><strong>Location:</strong> {{ bed.hospital.address }}, {{ bed.hospital.city }}</p>
+            <p><strong>Available Beds:</strong> {{ bed.available_beds }}</p>
+        </div>
+
+        <form method="post" class="form auth-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary auth-btn">Confirm Booking Request</button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'hospital_detail' bed.hospital.id %}">Back to Hospital Details</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

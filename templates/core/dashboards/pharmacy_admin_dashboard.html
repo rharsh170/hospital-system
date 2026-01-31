@@ -1,29 +1,113 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Pharmacy Admin Dashboard</h2>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Pharmacy admin dashboard</h2>
+        <p class="page-subtitle">Track inventory and respond to medicine orders quickly.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="/admin/" rel="noopener">Open admin</a>
+    </div>
+</div>
+
 {% if pharmacy %}
-    <p>Pharmacy: {{ pharmacy.name }} - {{ pharmacy.city }}</p>
+    <div class="card" style="margin-bottom:14px;">
+        <div class="card-header">
+            <h3>{{ pharmacy.name }}</h3>
+            <span class="pill-status">{{ pharmacy.city }}</span>
+        </div>
+        <div class="card-muted">Keep stock and prices updated to improve patient experience.</div>
+    </div>
 
-    <h3>Medicines</h3>
-    <ul>
-        {% for m in medicines %}
-            <li>{{ m.name }} - Stock: {{ m.stock }} - ₹{{ m.price }}</li>
-        {% empty %}
-            <li>No medicines configured.</li>
-        {% endfor %}
-    </ul>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Medicines</div>
+            <div class="kpi-value">{% if medicines %}{{ medicines|length }}{% else %}0{% endif %}</div>
+            <div class="kpi-meta">Items currently listed</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Recent orders</div>
+            <div class="kpi-value">{% if orders %}{{ orders|length }}{% else %}0{% endif %}</div>
+            <div class="kpi-meta">Latest order activity</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Priority</div>
+            <div class="kpi-value">Fulfillment</div>
+            <div class="kpi-meta">Confirm orders and keep turnaround low</div>
+        </div>
+    </div>
 
-    <h3>Recent Orders</h3>
-    <ul>
-        {% for o in orders %}
-            <li>Order #{{ o.id }} from {{ o.patient.username }} ({{ o.status }})</li>
-        {% empty %}
-            <li>No orders yet.</li>
-        {% endfor %}
-    </ul>
-    <p>Use Django admin to manage medicines and order statuses.</p>
+    <div class="stack">
+        <section class="card">
+            <div class="card-header">
+                <h3>Medicines</h3>
+                <span class="pill-status">{% if medicines %}{{ medicines|length }} listed{% else %}None yet{% endif %}</span>
+            </div>
+            {% if medicines %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in medicines %}
+                            <tr>
+                                <td><strong>{{ m.name }}</strong></td>
+                                <td>{{ m.stock }}</td>
+                                <td>₹{{ m.price }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty">No medicines configured. Add inventory in the admin panel to publish items to patients.</div>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <h3>Recent orders</h3>
+                <span class="pill-status">{% if orders %}{{ orders|length }} shown{% else %}No orders{% endif %}</span>
+            </div>
+            {% if orders %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Patient</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in orders %}
+                            <tr>
+                                <td><strong>#{{ o.id }}</strong></td>
+                                <td>{{ o.patient.username }}</td>
+                                <td>{{ o.status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty">No orders yet. When patients place orders, they’ll appear here for processing.</div>
+            {% endif %}
+            <p class="card-muted" style="margin:10px 0 0;">Tip: Update medicine stock and order statuses via Django admin.</p>
+        </section>
+    </div>
 {% else %}
-    <p>No pharmacy profile linked to this user. Configure via admin.</p>
+    <section class="card">
+        <div class="card-header">
+            <h3>No pharmacy profile linked</h3>
+            <span class="pill-status">Action required</span>
+        </div>
+        <div class="empty">This user doesn’t have a pharmacy profile yet. Configure it in the admin panel to unlock inventory and order management.</div>
+        <div style="margin-top:12px;">
+            <a class="btn btn-primary" href="/admin/" rel="noopener">Go to admin</a>
+        </div>
+    </section>
 {% endif %}
 {% endblock %}
 

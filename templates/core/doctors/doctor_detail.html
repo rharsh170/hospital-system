@@ -1,18 +1,83 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Dr. {{ doctor.name }}</h2>
-<p>Speciality: {{ doctor.speciality }}</p>
-<p>Hospital: {{ doctor.hospital.name }}</p>
-<p>City: {{ doctor.city }}</p>
-<p>Experience: {{ doctor.experience_years }} years</p>
-<p>Consultation Fee: ₹{{ doctor.consultation_fee }}</p>
-<p>Availability: {{ doctor.available_from }} - {{ doctor.available_to }}</p>
-<p>Languages: {{ doctor.languages_spoken }}</p>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Dr. {{ doctor.name }}</h2>
+        <p class="page-subtitle">{{ doctor.speciality }} • {{ doctor.city }}</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-outline" href="{% url 'doctor_search' %}">Back to doctors</a>
+        {% if user.is_authenticated and current_role == 'PATIENT' %}
+            <a class="btn btn-primary" href="{% url 'book_appointment' doctor.id %}">Book appointment</a>
+        {% endif %}
+    </div>
+</div>
 
-{% if user.is_authenticated and current_role == 'PATIENT' %}
-    <a href="{% url 'book_appointment' doctor.id %}" class="btn">Book Appointment</a>
-{% else %}
-    <p>Login as patient to book an appointment.</p>
-{% endif %}
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Consultation fee</div>
+        <div class="kpi-value">₹{{ doctor.consultation_fee }}</div>
+        <div class="kpi-meta">Pay at booking/visit (as configured)</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Experience</div>
+        <div class="kpi-value">{{ doctor.experience_years }}y</div>
+        <div class="kpi-meta">Years of practice</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Rating</div>
+        <div class="kpi-value">{% if doctor.rating %}{{ doctor.rating }}{% else %}—{% endif %}</div>
+        <div class="kpi-meta">Patient feedback</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Availability</div>
+        <div class="kpi-value" style="font-size:16px;">{{ doctor.available_from }}–{{ doctor.available_to }}</div>
+        <div class="kpi-meta">Typical window</div>
+    </div>
+</div>
+
+<div class="emergency-grid">
+    <section class="card resource-card">
+        <div class="resource-top">
+            <div class="media" style="align-items:flex-start;">
+                <div class="avatar"><img src="{% static 'img/doctor-avatar.svg' %}" alt="Doctor"></div>
+                <div>
+                    <h3 class="resource-title">Profile</h3>
+                    <p class="resource-sub">Hospital: {{ doctor.hospital.name }}</p>
+                </div>
+            </div>
+            <span class="badge badge-primary">{{ doctor.speciality }}</span>
+        </div>
+        <div class="resource-meta">
+            {% if doctor.qualification %}<span class="badge">Qualification: {{ doctor.qualification }}</span>{% endif %}
+            <span class="badge">City: {{ doctor.city }}</span>
+            <span class="badge">Hours: {{ doctor.available_from }}–{{ doctor.available_to }}</span>
+            {% if doctor.languages_spoken %}<span class="badge">Languages: {{ doctor.languages_spoken }}</span>{% endif %}
+        </div>
+        <div class="resource-actions">
+            {% if user.is_authenticated and current_role == 'PATIENT' %}
+                <a class="btn btn-primary" href="{% url 'book_appointment' doctor.id %}">Book now</a>
+            {% else %}
+                <a class="btn btn-outline" href="{% url 'login' %}">Login to book</a>
+            {% endif %}
+            <a class="btn btn-outline" href="{% url 'hospital_detail' doctor.hospital.id %}">View hospital</a>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>Need urgent help?</h3>
+            <span class="pill-status">Emergency</span>
+        </div>
+        <div class="card-muted">
+            If this is a medical emergency, call official numbers first.
+        </div>
+        <div class="resource-actions" style="margin-top:12px;">
+            <a class="btn btn-outline" href="{% url 'emergency_contacts' %}">Emergency contacts</a>
+            <a class="btn btn-primary" href="{% url 'support_request_create' %}">24/7 support request</a>
+        </div>
+    </section>
+</div>
 {% endblock %}
 

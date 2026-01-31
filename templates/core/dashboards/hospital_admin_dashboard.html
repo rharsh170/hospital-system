@@ -1,24 +1,98 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Hospital Admin Dashboard</h2>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Hospital admin dashboard</h2>
+        <p class="page-subtitle">Manage hospitals and keep appointments running smoothly.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="/admin/" rel="noopener">Open admin</a>
+    </div>
+</div>
 
-<h3>Your Hospitals</h3>
-<ul>
-    {% for h in hospitals %}
-        <li><a href="{% url 'hospital_detail' h.id %}">{{ h.name }}</a> - {{ h.city }} (Rating: {{ h.rating }})</li>
-    {% empty %}
-        <li>No hospitals configured yet.</li>
-    {% endfor %}
-</ul>
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Hospitals</div>
+        <div class="kpi-value">{% if hospitals %}{{ hospitals|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Facilities under your account</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Recent appointments</div>
+        <div class="kpi-value">{% if appointments %}{{ appointments|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Latest activity snapshot</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Focus</div>
+        <div class="kpi-value">Beds &amp; care</div>
+        <div class="kpi-meta">Keep availability accurate for patients</div>
+    </div>
+</div>
 
-<h3>Recent Appointments</h3>
-<ul>
-    {% for a in appointments %}
-        <li>{{ a.date }} {{ a.time_slot }} - {{ a.patient.username }} with Dr. {{ a.doctor.name }} ({{ a.status }})</li>
-    {% empty %}
-        <li>No appointments.</li>
-    {% endfor %}
-</ul>
-<p>Use Django admin to manage hospital beds and doctors.</p>
+<div class="stack">
+    <section class="card">
+        <div class="card-header">
+            <h3>Your hospitals</h3>
+            <span class="pill-status">{% if hospitals %}{{ hospitals|length }} total{% else %}None yet{% endif %}</span>
+        </div>
+        {% if hospitals %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Hospital</th>
+                        <th>City</th>
+                        <th>Rating</th>
+                        <th>Open</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in hospitals %}
+                        <tr>
+                            <td><strong>{{ h.name }}</strong></td>
+                            <td>{{ h.city }}</td>
+                            <td>{% if h.rating %}{{ h.rating }}{% else %}<span class="card-muted">—</span>{% endif %}</td>
+                            <td><a class="btn btn-small btn-outline" href="{% url 'hospital_detail' h.id %}">View</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">No hospitals configured yet. Add one in the admin panel to start managing beds and doctors.</div>
+        {% endif %}
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>Recent appointments</h3>
+            <span class="pill-status">{% if appointments %}{{ appointments|length }} listed{% else %}No data{% endif %}</span>
+        </div>
+        {% if appointments %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time slot</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in appointments %}
+                        <tr>
+                            <td>{{ a.date }}</td>
+                            <td>{{ a.time_slot }}</td>
+                            <td>{{ a.patient.username }}</td>
+                            <td>Dr. {{ a.doctor.name }}</td>
+                            <td>{{ a.status }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">No appointments yet. When patients start booking, they’ll appear here.</div>
+        {% endif %}
+        <p class="card-muted" style="margin:10px 0 0;">Tip: Use Django admin for operational changes (beds, doctors, appointment statuses).</p>
+    </section>
+</div>
 {% endblock %}
 

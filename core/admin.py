@@ -1,19 +1,22 @@
 from django.contrib import admin
 from .models import (
-    UserProfile,
+    Appointment,
+    BedBooking,
+    Cart,
+    CartItem,
+    Doctor,
     Hospital,
     HospitalBed,
-    Doctor,
-    Appointment,
-    OxygenSupplier,
-    OxygenCylinderStock,
-    OxygenBooking,
-    Pharmacy,
     Medicine,
     MedicineOrder,
     MedicineOrderItem,
-    SupportRequest,
     Notification,
+    OxygenBooking,
+    OxygenCylinderStock,
+    OxygenSupplier,
+    Pharmacy,
+    SupportRequest,
+    UserProfile,
 )
 
 
@@ -34,14 +37,33 @@ class DoctorInline(admin.TabularInline):
 
 @admin.register(Hospital)
 class HospitalAdmin(admin.ModelAdmin):
-    list_display = ('name', 'city', 'state', 'rating', 'support_24_7')
+    list_display = (
+        'name',
+        'city',
+        'state',
+        'hospital_type',
+        'rating',
+        'support_24_7',
+    )
+    list_filter = ('city', 'state', 'hospital_type', 'support_24_7')
+    search_fields = ('name', 'city', 'specialties_offered')
     inlines = [HospitalBedInline, DoctorInline]
 
 
 @admin.register(Doctor)
 class DoctorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'speciality', 'hospital', 'city', 'consultation_fee', 'is_active')
+    list_display = (
+        'name',
+        'speciality',
+        'hospital',
+        'city',
+        'qualification',
+        'consultation_fee',
+        'rating',
+        'is_active',
+    )
     list_filter = ('speciality', 'city', 'hospital')
+    search_fields = ('name', 'hospital__name', 'speciality', 'qualification')
 
 
 @admin.register(Appointment)
@@ -85,8 +107,19 @@ class PharmacyAdmin(admin.ModelAdmin):
 
 @admin.register(Medicine)
 class MedicineAdmin(admin.ModelAdmin):
-    list_display = ('name', 'pharmacy', 'price', 'stock', 'is_essential')
-    list_filter = ('is_essential',)
+    list_display = (
+        'name',
+        'brand',
+        'form',
+        'strength',
+        'pharmacy',
+        'price',
+        'pack_size',
+        'stock',
+        'is_essential',
+    )
+    list_filter = ('is_essential', 'form', 'brand', 'pharmacy')
+    search_fields = ('name', 'brand', 'pharmacy__name')
 
 
 class MedicineOrderItemInline(admin.TabularInline):
@@ -100,6 +133,17 @@ class MedicineOrderAdmin(admin.ModelAdmin):
     inlines = [MedicineOrderItemInline]
 
 
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'is_active', 'created_at', 'updated_at')
+    list_filter = ('is_active',)
+
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'medicine', 'quantity')
+
+
 @admin.register(SupportRequest)
 class SupportRequestAdmin(admin.ModelAdmin):
     list_display = ('subject', 'name', 'is_emergency', 'status', 'created_at')
@@ -110,3 +154,8 @@ class SupportRequestAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'notification_type', 'message', 'is_read', 'created_at')
     list_filter = ('notification_type', 'is_read')
+@admin.register(BedBooking)
+class BedBookingAdmin(admin.ModelAdmin):
+    list_display = ('id', 'patient', 'hospital_bed', 'booking_date', 'status', 'created_at')
+    list_filter = ('status', 'booking_date')
+    search_fields = ('patient__username', 'hospital_bed__hospital__name')

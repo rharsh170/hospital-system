@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">{{ hospital.name }}</h2>
+        <p class="page-subtitle">{{ hospital.address }}, {{ hospital.city }}{% if hospital.state %}, {{ hospital.state
+            }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-outline" href="{% url 'hospital_list' %}">Back to hospitals</a>
+        <a class="btn btn-primary" href="{% url 'support_request_create' %}">Request help</a>
+    </div>
+</div>
+
+{% if hospital.hospital_type or hospital.established_year or hospital.website or hospital.specialties_offered %}
+<section class="card card-hero" style="margin-bottom:14px;">
+    <div class="card-header">
+        <h3>Hospital overview</h3>
+        <span class="pill-status">Details</span>
+    </div>
+    <div class="resource-meta">
+        {% if hospital.hospital_type %}<span class="badge">Type: {{ hospital.hospital_type }}</span>{% endif %}
+        {% if hospital.established_year %}<span class="badge">Established: {{ hospital.established_year }}</span>{%
+        endif %}
+        {% if hospital.specialties_offered %}<span class="badge">Specialties: {{ hospital.specialties_offered
+            }}</span>{% endif %}
+        {% if hospital.website %}<span class="badge"><a class="emergency-call" href="{{ hospital.website }}"
+                target="_blank" rel="noopener">Website</a></span>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Rating</div>
+        <div class="kpi-value">{% if hospital.rating %}{{ hospital.rating }}{% else %}—{% endif %}</div>
+        <div class="kpi-meta">Community score</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Support</div>
+        <div class="kpi-value">{{ hospital.support_24_7|yesno:"24/7,Limited" }}</div>
+        <div class="kpi-meta">Availability status</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Contact</div>
+        <div class="kpi-value" style="font-size:16px;">
+            {% if hospital.contact_phone %}<a class="emergency-call" href="tel:{{ hospital.contact_phone }}">{{
+                hospital.contact_phone }}</a>{% else %}—{% endif %}
+        </div>
+        <div class="kpi-meta">Hospital phone</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Emergency</div>
+        <div class="kpi-value" style="font-size:16px;">
+            {% if hospital.emergency_contact %}<a class="emergency-call" href="tel:{{ hospital.emergency_contact }}">{{
+                hospital.emergency_contact }}</a>{% else %}—{% endif %}
+        </div>
+        <div class="kpi-meta">Emergency contact</div>
+    </div>
+</div>
+
+<div class="emergency-grid">
+    <section class="card resource-card">
+        <div class="resource-top">
+            <div class="media" style="align-items:flex-start;">
+                <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Hospital"></div>
+                <div>
+                    <h3 class="resource-title">Bed availability</h3>
+                    <p class="resource-sub">Current capacity snapshot</p>
+                </div>
+            </div>
+            <span class="badge badge-primary">Beds</span>
+        </div>
+        <ul class="mini-list">
+            {% for b in beds %}
+            <li class="mini-row">
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
+                    <span><strong>{{ b.get_bed_type_display }}</strong></span>
+                    <span
+                        class="{% if b.available_beds > 0 %}badge badge-success{% else %}badge badge-danger{% endif %}">{{
+                        b.available_beds }}/{{ b.total_beds }} available</span>
+                </div>
+                {% if b.available_beds > 0 and current_role == 'PATIENT' %}
+                <a class="btn btn-small btn-primary" href="{% url 'bed_booking_create' b.id %}">Book Now</a>
+                {% elif b.available_beds <= 0 %} <span class="badge badge-danger">Full</span>
+                    {% endif %}
+            <li class="mini-row"><span class="muted">No bed information</span><span class="badge">—</span></li>
+            {% endfor %}
+        </ul>
+        <div class="resource-actions">
+            <a class="btn btn-small btn-outline" href="{% url 'hospital_list' %}">Compare hospitals</a>
+            <a class="btn btn-small btn-ghost" href="{% url 'emergency_contacts' %}">Emergency numbers</a>
+        </div>
+    </section>
+
+    <section class="card resource-card">
+        <div class="resource-top">
+            <div class="media" style="align-items:flex-start;">
+                <div class="avatar"><img src="{% static 'img/doctor-avatar.svg' %}" alt="Doctors"></div>
+                <div>
+                    <h3 class="resource-title">Doctors</h3>
+                    <p class="resource-sub">Available specialists at this hospital</p>
+                </div>
+            </div>
+            <span class="badge">Directory</span>
+        </div>
+        <ul class="mini-list">
+            {% for d in doctors %}
+            <li class="mini-row">
+                <span><strong>Dr. {{ d.name }}</strong> <span class="muted">• {{ d.speciality }}</span></span>
+                <span><a class="btn btn-small btn-outline" href="{% url 'doctor_detail' d.id %}">View</a></span>
+            </li>
+            {% empty %}
+            <li class="mini-row"><span class="muted">No doctors registered</span><span class="badge">—</span></li>
+            {% endfor %}
+        </ul>
+        <div class="resource-actions">
+            <a class="btn btn-small btn-outline"
+                href="{% url 'doctor_search' %}?city={{ hospital.city|urlencode }}">Search more doctors</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

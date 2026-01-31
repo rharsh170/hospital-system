@@ -1,7 +1,16 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Appointment, OxygenBooking, MedicineOrderItem, SupportRequest, UserProfile
+from .models import (
+    Appointment,
+    BedBooking,
+    CartItem,
+    MedicineOrder,
+    MedicineOrderItem,
+    OxygenBooking,
+    SupportRequest,
+    UserProfile,
+)
 
 
 class PatientRegistrationForm(UserCreationForm):
@@ -32,7 +41,11 @@ class AppointmentForm(forms.ModelForm):
 class OxygenBookingForm(forms.ModelForm):
     class Meta:
         model = OxygenBooking
-        fields = ['quantity', 'delivery_address', 'scheduled_date']
+        fields = ['quantity', 'delivery_address', 'scheduled_date', 'time_slot', 'payment_option']
+        widgets = {
+            'scheduled_date': forms.DateInput(attrs={'type': 'date'}),
+            'time_slot': forms.TimeInput(attrs={'type': 'time'}),
+        }
 
 
 class MedicineOrderItemForm(forms.ModelForm):
@@ -41,8 +54,36 @@ class MedicineOrderItemForm(forms.ModelForm):
         fields = ['quantity']
 
 
+class CartAddItemForm(forms.ModelForm):
+    """
+    Simple form used on the medicine listing page to add packs to cart.
+    """
+
+    class Meta:
+        model = CartItem
+        fields = ['quantity']
+
+
+class MedicineOrderContactForm(forms.ModelForm):
+    """
+    Captures patient contact phone and delivery address at checkout.
+    """
+
+    class Meta:
+        model = MedicineOrder
+        fields = ['contact_phone', 'shipping_address']
+
+
 class SupportRequestForm(forms.ModelForm):
     class Meta:
         model = SupportRequest
         fields = ['name', 'contact', 'subject', 'description', 'is_emergency']
 
+class BedBookingForm(forms.ModelForm):
+    class Meta:
+        model = BedBooking
+        fields = ['booking_date', 'time_slot', 'payment_option']
+        widgets = {
+            'booking_date': forms.DateInput(attrs={'type': 'date'}),
+            'time_slot': forms.TimeInput(attrs={'type': 'time'}),
+        }

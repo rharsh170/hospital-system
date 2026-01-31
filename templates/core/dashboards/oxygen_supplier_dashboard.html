@@ -1,29 +1,120 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Oxygen Supplier Dashboard</h2>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Oxygen supplier dashboard</h2>
+        <p class="page-subtitle">Monitor stock levels and manage delivery schedules.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="/admin/" rel="noopener">Open admin</a>
+    </div>
+</div>
+
 {% if supplier %}
-    <p>Supplier: {{ supplier.name }} - {{ supplier.city }}</p>
+<div class="card" style="margin-bottom:14px;">
+    <div class="card-header">
+        <h3>{{ supplier.name }}</h3>
+        <span class="pill-status">{{ supplier.city }}</span>
+    </div>
+    <div class="card-muted">Keep availability accurate so patients can book the right cylinder capacity.</div>
+</div>
 
-    <h3>Stocks</h3>
-    <ul>
-        {% for s in stocks %}
-            <li>{{ s.capacity_litres }}L - ₹{{ s.price_per_cylinder }} - Available: {{ s.available_cylinders }}</li>
-        {% empty %}
-            <li>No stocks configured.</li>
-        {% endfor %}
-    </ul>
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Stock SKUs</div>
+        <div class="kpi-value">{% if stocks %}{{ stocks|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Capacities and pricing entries</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Recent bookings</div>
+        <div class="kpi-value">{% if bookings %}{{ bookings|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Latest patient requests</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Operational goal</div>
+        <div class="kpi-value">On-time</div>
+        <div class="kpi-meta">Deliver safely and on schedule</div>
+    </div>
+</div>
 
-    <h3>Recent Bookings</h3>
-    <ul>
-        {% for b in bookings %}
-            <li>#{{ b.id }} - {{ b.patient.username }} - {{ b.quantity }} cylinders on {{ b.scheduled_date }} ({{ b.status }})</li>
-        {% empty %}
-            <li>No bookings yet.</li>
-        {% endfor %}
-    </ul>
-    <p>Use Django admin to manage stocks and booking statuses.</p>
+<div class="stack">
+    <section class="card">
+        <div class="card-header">
+            <h3>Stock</h3>
+            <span class="pill-status">{% if stocks %}{{ stocks|length }} entries{% else %}None yet{% endif %}</span>
+        </div>
+        {% if stocks %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Capacity</th>
+                    <th>Price / cylinder</th>
+                    <th>Available cylinders</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in stocks %}
+                <tr>
+                    <td><strong>{{ s.capacity_litres }}L <small>(₹{{ s.price_per_cylinder }})</small></strong></td>
+                    <td>₹{{ s.price_per_cylinder }}</td>
+                    <td>{{ s.available_cylinders }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No stock configured. Add cylinder capacities and availability in the admin panel.</div>
+        {% endif %}
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>Recent bookings</h3>
+            <span class="pill-status">{% if bookings %}{{ bookings|length }} shown{% else %}No bookings{% endif
+                %}</span>
+        </div>
+        {% if bookings %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Booking</th>
+                    <th>Patient</th>
+                    <th>Quantity</th>
+                    <th>Scheduled date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td><strong>#{{ b.id }}</strong> <br><small>({{ b.stock.capacity_litres }}L • ₹{{
+                            b.stock.price_per_cylinder }})</small></td>
+                    <td>{{ b.patient.username }}</td>
+                    <td>{{ b.quantity }}</td>
+                    <td>{{ b.scheduled_date }}</td>
+                    <td>{{ b.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No bookings yet. When patients request oxygen, you’ll see them here.</div>
+        {% endif %}
+        <p class="card-muted" style="margin:10px 0 0;">Tip: Manage stock quantities and booking statuses via Django
+            admin.</p>
+    </section>
+</div>
 {% else %}
-    <p>No oxygen supplier profile linked to this user. Configure via admin.</p>
+<section class="card">
+    <div class="card-header">
+        <h3>No supplier profile linked</h3>
+        <span class="pill-status">Action required</span>
+    </div>
+    <div class="empty">This user doesn’t have an oxygen supplier profile yet. Configure it in the admin panel to unlock
+        stock and booking management.</div>
+    <div style="margin-top:12px;">
+        <a class="btn btn-primary" href="/admin/" rel="noopener">Go to admin</a>
+    </div>
+</section>
 {% endif %}
 {% endblock %}
-

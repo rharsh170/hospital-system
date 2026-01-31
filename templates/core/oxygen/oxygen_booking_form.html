@@ -1,14 +1,76 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Book Oxygen Cylinders</h2>
-<p>Supplier: {{ stock.supplier.name }} ({{ stock.capacity_litres }}L)</p>
-<p>Price per cylinder: ₹{{ stock.price_per_cylinder }}</p>
-<p>Available: {{ stock.available_cylinders }}</p>
+<div class="auth-overlay">
+    <div class="auth-card" style="max-width: 550px;">
+        <div class="media" style="margin-bottom: 20px;">
+            <div class="avatar" style="width:60px; height:60px;">
+                <img src="{% static 'img/oxygen-tank.svg' %}" alt="Oxygen">
+            </div>
+            <div>
+                <h2 style="margin:0;">Book Oxygen</h2>
+                <p class="auth-subtitle" style="margin:0;">from {{ stock.supplier.name }}</p>
+            </div>
+        </div>
 
-<form method="post" class="form">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Book</button>
-</form>
+        <div class="card card-muted" style="margin-bottom: 25px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <p style="margin:0; font-size:12px; text-transform:uppercase; color:var(--text-muted);">Capacity</p>
+                    <p style="margin:0; font-weight:600;">{{ stock.capacity_litres }} Litres</p>
+                </div>
+                <div>
+                    <p style="margin:0; font-size:12px; text-transform:uppercase; color:var(--text-muted);">Price</p>
+                    <p style="margin:0; font-weight:600;">₹{{ stock.price_per_cylinder }} / cylinder</p>
+                </div>
+                <div>
+                    <p style="margin:0; font-size:12px; text-transform:uppercase; color:var(--text-muted);">Location</p>
+                    <p style="margin:0; font-weight:600;">{{ stock.supplier.city }}</p>
+                </div>
+                <div>
+                    <p style="margin:0; font-size:12px; text-transform:uppercase; color:var(--text-muted);">In Stock</p>
+                    <p
+                        style="margin:0; font-weight:600; color:{% if stock.available_cylinders > 5 %}var(--success){% else %}var(--danger){% endif %};">
+                        {{ stock.available_cylinders }} units
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="form auth-form">
+            {% csrf_token %}
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500;">Quantity</label>
+                {{ form.quantity }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500;">Scheduled Date</label>
+                {{ form.scheduled_date }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500;">Preferred Time</label>
+                {{ form.time_slot }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500;">Payment Option</label>
+                {{ form.payment_option }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500;">Delivery Address</label>
+                {{ form.delivery_address }}
+            </div>
+
+            <button type="submit" class="btn btn-primary auth-btn" style="width:100%;">Submit Booking Request</button>
+        </form>
+
+        <p class="auth-footer" style="margin-top:20px;">
+            <a href="{% url 'oxygen_list' %}">Back to Oxygen Suppliers</a>
+        </p>
+    </div>
+</div>
 {% endblock %}
-

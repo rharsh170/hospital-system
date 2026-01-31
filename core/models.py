@@ -9,6 +9,7 @@ class UserProfile(models.Model):
         ('HOSPITAL_ADMIN', 'Hospital Admin'),
         ('PHARMACY_ADMIN', 'Pharmacy Admin'),
         ('OXYGEN_SUPPLIER', 'Oxygen Supplier'),
+        ('ADMIN', 'Platform Admin'),
     ]
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='PATIENT')
@@ -24,10 +25,30 @@ class Hospital(models.Model):
     address = models.TextField()
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
+    hospital_type = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="e.g. Multispeciality, Cardiac Center, Children’s Hospital",
+    )
+    established_year = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Year the hospital was established",
+    )
+    website = models.URLField(blank=True)
+    image_url = models.URLField(
+        blank=True,
+        help_text="Optional hero/cover image shown on the hospital detail page",
+    )
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=3.0)
     contact_phone = models.CharField(max_length=20)
     emergency_contact = models.CharField(max_length=20)
     support_24_7 = models.BooleanField(default=True)
+    specialties_offered = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Comma-separated list of key specialties (Cardiology, Neurology, etc.)",
+    )
 
     def __str__(self):
         return self.name
@@ -60,6 +81,17 @@ class Doctor(models.Model):
     speciality = models.CharField(max_length=100, choices=SPECIALITY_CHOICES)
     experience_years = models.PositiveIntegerField()
     consultation_fee = models.DecimalField(max_digits=8, decimal_places=2)
+    qualification = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="e.g. MBBS, MD (Cardiology)",
+    )
+    rating = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        default=4.5,
+        help_text="Average patient rating out of 5",
+    )
     available_from = models.TimeField()
     available_to = models.TimeField()
     languages_spoken = models.CharField(max_length=255)
@@ -109,6 +141,11 @@ class OxygenCylinderStock(models.Model):
 
 
 class OxygenBooking(models.Model):
+    PAYMENT_CHOICES = [
+        ('CASH', 'Cash on Delivery / Pickup'),
+        ('INSURANCE', 'Insurance / TPA'),
+        ('ONLINE', 'Online Payment'),
+    ]
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('CONFIRMED', 'Confirmed'),
@@ -120,11 +157,13 @@ class OxygenBooking(models.Model):
     quantity = models.PositiveIntegerField()
     delivery_address = models.TextField()
     scheduled_date = models.DateField()
+    time_slot = models.TimeField(help_text="Expected delivery/pickup time", null=True, blank=True)
+    payment_option = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='CASH')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Oxygen booking #{self.id} - {self.patient}'
+        return f'Oxygen Booking #{self.id} for {self.patient.username} - {self.stock.capacity_litres}L from {self.stock.supplier.name}'
 
 
 class Pharmacy(models.Model):
@@ -142,9 +181,28 @@ class Medicine(models.Model):
     pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name='medicines')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    brand = models.CharField(max_length=255, blank=True)
+    form = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="e.g. Tablet, Syrup, Injection",
+    )
+    strength = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="e.g. 500 mg, 5 mg/ml",
+    )
+    pack_size = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of units (e.g. tablets) per pack",
+    )
     price = models.DecimalField(max_digits=8, decimal_places=2)
     stock = models.PositiveIntegerField()
     is_essential = models.BooleanField(default=True)
+    image_url = models.URLField(
+        blank=True,
+        help_text="Optional image for advanced medicine cards",
+    )
 
     def __str__(self):
         return f'{self.name} ({self.pharmacy.name})'
@@ -162,6 +220,8 @@ class MedicineOrder(models.Model):
     pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name='orders')
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    contact_phone = models.CharField(max_length=20, blank=True)
+    shipping_address = models.TextField(blank=True)
 
     def __str__(self):
         return f'Medicine order #{self.id}'
@@ -175,6 +235,51 @@ class MedicineOrderItem(models.Model):
 
     def __str__(self):
         return f'{self.medicine.name} x {self.quantity}'
+
+
+class Cart(models.Model):
+    """
+    Lightweight e‑commerce cart for medicine packs.
+    Tied to an authenticated user; items are converted into MedicineOrder
+    records on checkout.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='carts',
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'Cart #{self.id} for {self.user.username}'
+
+    def total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+    def total_price(self):
+        return sum(item.subtotal for item in self.items.select_related('medicine'))
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ('cart', 'medicine')
+
+    def __str__(self):
+        return f'{self.medicine.name} x {self.quantity} (cart #{self.cart_id})'
+
+    @property
+    def subtotal(self):
+        return self.quantity * self.medicine.price
 
 
 class SupportRequest(models.Model):
@@ -212,3 +317,26 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'Notification for {self.user.username}'
+
+
+class BedBooking(models.Model):
+    PAYMENT_CHOICES = [
+        ('CASH', 'Cash at Hospital'),
+        ('INSURANCE', 'Insurance / TPA'),
+        ('ONLINE', 'Online Payment'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('CONFIRMED', 'Confirmed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bed_bookings')
+    hospital_bed = models.ForeignKey(HospitalBed, on_delete=models.CASCADE, related_name='bookings')
+    booking_date = models.DateField()
+    time_slot = models.TimeField(help_text="Expected arrival time")
+    payment_option = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='CASH')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Bed Booking #{self.id} for {self.patient.username} at {self.hospital_bed.hospital.name}'

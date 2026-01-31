@@ -1,51 +1,98 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Hospital Bed Availability</h2>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Hospital bed availability</h2>
+        <p class="page-subtitle">Live availability view with auto-refresh for near real-time updates.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'emergency_contacts' %}">Emergency help</a>
+    </div>
+</div>
 
-<form method="get" class="form-inline">
-    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
-    <select name="bed_type">
-        <option value="">All Bed Types</option>
-        <option value="ICU" {% if selected_bed_type == 'ICU' %}selected{% endif %}>ICU</option>
-        <option value="GENERAL" {% if selected_bed_type == 'GENERAL' %}selected{% endif %}>General</option>
-        <option value="EMERGENCY" {% if selected_bed_type == 'EMERGENCY' %}selected{% endif %}>Emergency</option>
-    </select>
-    <input type="number" name="min_rating" step="0.1" min="0" max="5" placeholder="Min Rating" value="{{ selected_min_rating }}">
-    <button type="submit" class="btn">Filter</button>
-</form>
+<section class="card filters-card card-hero">
+    <div class="media">
+        <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Hospitals"></div>
+        <div>
+            <div style="font-weight:900; letter-spacing:-0.2px;">Filter results</div>
+            <div class="card-muted">Use city, bed type, and rating to narrow down quickly.</div>
+        </div>
+    </div>
+    <form method="get" class="filters-grid" style="margin-top:12px;">
+        <div>
+            <label>City</label>
+            <input type="text" name="city" placeholder="e.g. Mumbai" value="{{ selected_city }}">
+        </div>
+        <div>
+            <label>Bed type</label>
+            <select name="bed_type">
+                <option value="">All</option>
+                <option value="ICU" {% if selected_bed_type == 'ICU' %}selected{% endif %}>ICU</option>
+                <option value="GENERAL" {% if selected_bed_type == 'GENERAL' %}selected{% endif %}>General</option>
+                <option value="EMERGENCY" {% if selected_bed_type == 'EMERGENCY' %}selected{% endif %}>Emergency</option>
+            </select>
+        </div>
+        <div>
+            <label>Min rating</label>
+            <input type="number" name="min_rating" step="0.1" min="0" max="5" placeholder="0–5" value="{{ selected_min_rating }}">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </div>
+    </form>
+    <div class="refresh-row">
+        <div>Auto-refresh: every 30 seconds</div>
+        <div id="hospital-last-updated">Last updated: just now</div>
+    </div>
+</section>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Hospital</th>
-            <th>City</th>
-            <th>Rating</th>
-            <th>Bed Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="hospital-table-body">
-        {% for h in hospitals %}
-        <tr>
-            <td>{{ h.name }}</td>
-            <td>{{ h.city }}</td>
-            <td>{{ h.rating }}</td>
-            <td>
+<div class="resource-grid" id="hospital-grid">
+    {% for h in hospitals %}
+        <section class="card resource-card">
+            <div class="resource-top">
+                <div class="media" style="align-items:flex-start;">
+                    <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Hospital"></div>
+                    <div>
+                        <h3 class="resource-title">{{ h.name }}</h3>
+                        <p class="resource-sub">
+                            {{ h.city }}
+                            {% if h.hospital_type %} • {{ h.hospital_type }}{% endif %}
+                            {% if h.rating %} • Rating {{ h.rating }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                <span class="badge badge-primary">Beds</span>
+            </div>
+
+            <ul class="mini-list">
                 {% for b in h.beds.all %}
-                    <div>{{ b.bed_type }}: {{ b.available_beds }}/{{ b.total_beds }}</div>
+                    <li class="mini-row">
+                        <span><strong>{{ b.bed_type }}</strong></span>
+                        <span class="{% if b.available_beds > 0 %}badge badge-success{% else %}badge badge-danger{% endif %}">
+                            {{ b.available_beds }}/{{ b.total_beds }}
+                        </span>
+                    </li>
                 {% empty %}
-                    <div>No bed data</div>
+                    <li class="mini-row"><span class="muted">No bed data</span><span class="badge">—</span></li>
                 {% endfor %}
-            </td>
-            <td><a href="{% url 'hospital_detail' h.id %}" class="btn-small">Details</a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">No hospitals found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </ul>
 
-<p class="small-text">This table auto-refreshes every 30 seconds to reflect near real-time bed availability.</p>
+            <div class="resource-actions">
+                <a class="btn btn-small btn-outline" href="{% url 'hospital_detail' h.id %}">View details</a>
+                <a class="btn btn-small btn-ghost" href="{% url 'doctor_search' %}?city={{ h.city|urlencode }}">Find doctors</a>
+            </div>
+        </section>
+    {% empty %}
+        <section class="card">
+            <div class="card-header">
+                <h3>No hospitals found</h3>
+                <span class="pill-status">Try filters</span>
+            </div>
+            <div class="empty">Adjust city/bed type/rating and try again.</div>
+        </section>
+    {% endfor %}
+</div>
 
 <script>
     function refreshBeds() {
@@ -54,19 +101,48 @@
             headers: {'X-Requested-With': 'XMLHttpRequest'}
         }).then(r => r.json())
          .then(data => {
-            const body = document.getElementById('hospital-table-body');
-            body.innerHTML = '';
+            const grid = document.getElementById('hospital-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
             data.hospitals.forEach(h => {
-                const tr = document.createElement('tr');
-                const bedsHtml = h.beds.map(b => `${b.bed_type}: ${b.available_beds}/${b.total_beds}`).join('<br>');
-                tr.innerHTML = `
-                    <td>${h.name}</td>
-                    <td>${h.city}</td>
-                    <td>${h.rating}</td>
-                    <td>${bedsHtml}</td>
-                    <td><span class="btn-small disabled">Details</span></td>`;
-                body.appendChild(tr);
+                const card = document.createElement('section');
+                card.className = 'card resource-card';
+                const bedsRows = (h.beds || []).map(b => {
+                    const ok = Number(b.available_beds) > 0;
+                    const badge = ok ? 'badge badge-success' : 'badge badge-danger';
+                    return `
+                      <li class="mini-row">
+                        <span><strong>${b.bed_type}</strong></span>
+                        <span class="${badge}">${b.available_beds}/${b.total_beds}</span>
+                      </li>`;
+                }).join('');
+                card.innerHTML = `
+                  <div class="resource-top">
+                    <div class="media" style="align-items:flex-start;">
+                      <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Hospital"></div>
+                      <div>
+                        <h3 class="resource-title">${h.name}</h3>
+                        <p class="resource-sub">${h.city} • Rating ${h.rating}</p>
+                      </div>
+                    </div>
+                    <span class="badge badge-primary">Beds</span>
+                  </div>
+                  <ul class="mini-list">${bedsRows || `<li class="mini-row"><span class="muted">No bed data</span><span class="badge">—</span></li>`}</ul>
+                  <div class="resource-actions">
+                    <a class="btn btn-small btn-outline" href="#">View details</a>
+                    <a class="btn btn-small btn-ghost" href="{% url 'doctor_search' %}?city=${encodeURIComponent(h.city)}">Find doctors</a>
+                  </div>
+                `;
+                const detailsLink = card.querySelector('a.btn-outline');
+                if (detailsLink) {
+                    const tpl = "{% url 'hospital_detail' 0 %}";
+                    detailsLink.href = tpl.replace('/0/', `/${encodeURIComponent(h.id)}/`);
+                }
+                grid.appendChild(card);
             });
+            const ts = new Date();
+            const el = document.getElementById('hospital-last-updated');
+            if (el) el.textContent = `Last updated: ${ts.toLocaleTimeString()}`;
         });
     }
     setInterval(refreshBeds, 30000);

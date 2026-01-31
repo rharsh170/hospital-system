@@ -1,15 +1,55 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Order Medicine</h2>
-<p>Medicine: {{ medicine.name }}</p>
-<p>Pharmacy: {{ medicine.pharmacy.name }} ({{ medicine.pharmacy.city }})</p>
-<p>Price: ₹{{ medicine.price }}</p>
-<p>Available stock: {{ medicine.stock }}</p>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Order medicine</h2>
+        <p class="page-subtitle">Review details and place an order securely.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'medicine_search' %}">Back to medicines</a>
+    </div>
+</div>
 
-<form method="post" class="form">
-    {% csrf_token %}
-    {{ item_form.as_p }}
-    <button type="submit" class="btn">Place Order</button>
-</form>
+<div class="emergency-grid">
+    <section class="card resource-card">
+        <div class="resource-top">
+            <div class="media" style="align-items:flex-start;">
+                <div class="avatar"><img src="{% static 'img/medicine-pill.svg' %}" alt="Medicine"></div>
+                <div>
+                    <h3 class="resource-title">{{ medicine.name }}</h3>
+                    <p class="resource-sub">{{ medicine.pharmacy.name }} • {{ medicine.pharmacy.city }}</p>
+                </div>
+            </div>
+            <span class="badge badge-primary">₹{{ medicine.price }}</span>
+        </div>
+        <div class="resource-meta">
+            <span class="badge {% if medicine.stock > 0 %}badge-success{% else %}badge-danger{% endif %}">Stock: {{ medicine.stock }}</span>
+            <span class="badge {% if medicine.is_essential %}badge-primary{% endif %}">Essential: {{ medicine.is_essential|yesno:"Yes,No" }}</span>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>Checkout details</h3>
+            <span class="pill-status">Contact &amp; address</span>
+        </div>
+        <form method="post" class="form" style="margin:0;">
+            {% csrf_token %}
+            <fieldset style="border:none; padding:0; margin:0 0 10px;">
+                <legend style="font-size:13px; font-weight:600; margin-bottom:6px;">Quantity</legend>
+                {{ item_form.as_p }}
+            </fieldset>
+            <fieldset style="border:none; padding:0; margin:10px 0 0;">
+                <legend style="font-size:13px; font-weight:600; margin-bottom:6px;">Delivery details</legend>
+                {{ contact_form.as_p }}
+            </fieldset>
+            <button type="submit" class="btn btn-primary">Place order</button>
+        </form>
+        <div class="card-muted" style="margin-top:10px;">
+            We use your phone and address for delivery updates. You’ll receive a notification after the order is created.
+        </div>
+    </section>
+</div>
 {% endblock %}
 

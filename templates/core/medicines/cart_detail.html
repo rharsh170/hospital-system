@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">
+            {% if is_checkout %}Review &amp; place order{% else %}Your cart{% endif %}
+        </h2>
+        <p class="page-subtitle">
+            Packs added from the medicine search page are collected here. You can adjust quantities and then place a combined order.
+        </p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'medicine_search' %}">Continue shopping</a>
+    </div>
+</div>
+
+{% if not cart or not items %}
+    <section class="card">
+        <div class="card-header">
+            <h3>Cart is empty</h3>
+            <span class="pill-status">Browse medicines</span>
+        </div>
+        <div class="card-muted">Add a few medicine packs from the search page to see them here.</div>
+    </section>
+{% else %}
+    <div class="emergency-grid">
+        <section class="card">
+            <div class="card-header">
+                <h3>Items in your cart</h3>
+                <span class="pill-status">{{ items|length }} item{{ items|length|pluralize }}</span>
+            </div>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Pharmacy</th>
+                    <th style="width:120px;">Packs</th>
+                    <th style="width:120px;">Price / pack</th>
+                    <th style="width:120px;">Subtotal</th>
+                    <th style="width:80px;"></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.medicine.name }}</strong>
+                            {% if item.medicine.strength %}
+                                <div class="small-text">{{ item.medicine.strength }}{% if item.medicine.form %} • {{ item.medicine.form }}{% endif %}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ item.medicine.pharmacy.name }}<br>
+                            <span class="small-text">{{ item.medicine.pharmacy.city }}</span>
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'cart_update' item.id %}">
+                                {% csrf_token %}
+                                <input type="number" name="quantity" min="0" max="{{ item.medicine.stock }}" value="{{ item.quantity }}" class="cart-qty-input">
+                                <button type="submit" class="btn btn-small btn-outline">Update</button>
+                            </form>
+                        </td>
+                        <td>₹{{ item.medicine.price }}</td>
+                        <td>₹{{ item.subtotal }}</td>
+                        <td>
+                            <form method="post" action="{% url 'cart_remove' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-ghost">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p class="card-muted" style="margin-top:10px;">
+                Set a quantity to <strong>0</strong> to remove an item. Packs are multiplied by the per-pack price at checkout.
+            </p>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <h3>{% if is_checkout %}Order &amp; delivery{% else %}Order summary{% endif %}</h3>
+                <span class="pill-status">Multi-pharmacy aware</span>
+            </div>
+            <ul class="mini-list">
+                {% for pharmacy, total in totals_by_pharmacy.items %}
+                    <li class="mini-row">
+                        <span>{{ pharmacy.name }} • {{ pharmacy.city }}</span>
+                        <span><strong>₹{{ total }}</strong></span>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="mini-row" style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;">
+                <span>Total payable</span>
+                <span>
+                    <strong>₹{{ cart.total_price }}</strong>
+                </span>
+            </div>
+
+            {% if is_checkout %}
+                <form method="post" action="{% url 'cart_checkout' %}" class="form" style="margin-top:16px;">
+                    {% csrf_token %}
+                    <fieldset style="border:none; padding:0; margin:0;">
+                        <legend style="font-size:13px; font-weight:600; margin-bottom:6px;">Contact &amp; delivery address</legend>
+                        {{ contact_form.as_p }}
+                    </fieldset>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Place order</button>
+                </form>
+                <p class="card-muted" style="margin-top:10px;">
+                    On confirmation, separate orders will be created per pharmacy.
+                    You’ll see them on your dashboard and in notifications.
+                </p>
+            {% else %}
+                <div class="resource-actions" style="margin-top:14px;">
+                    <a class="btn btn-primary" href="{% url 'cart_checkout' %}">Proceed to checkout</a>
+                    <a class="btn btn-outline" href="{% url 'medicine_search' %}">Add more medicines</a>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% endif %}
+{% endblock %}
+

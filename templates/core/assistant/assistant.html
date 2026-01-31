@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">CURA Assistant</h2>
+        <p class="page-subtitle">Ask questions about the platform and view live updates from the database.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'dashboard' %}">Go to dashboard</a>
+    </div>
+</div>
+
+<section class="card">
+    <div class="card-header">
+        <h3>How can I help?</h3>
+        <span class="pill-status">Live guidance</span>
+    </div>
+    <div class="card-muted">
+        Use the chat widget in the bottom-right corner on any page, or ask here:
+    </div>
+    <form class="assistant-inline" onsubmit="return false;">
+        <input class="assistant-inline-input" id="assistantInlineInput" placeholder="Type: stats, how does CURA work, book a doctor..." autocomplete="off">
+        <button class="btn btn-primary" id="assistantInlineSend">Send</button>
+    </form>
+    <pre class="assistant-inline-output" id="assistantInlineOutput">Tip: type “stats” for real-time platform data.</pre>
+</section>
+
+<script>
+(() => {
+  const input = document.getElementById('assistantInlineInput');
+  const out = document.getElementById('assistantInlineOutput');
+  const btn = document.getElementById('assistantInlineSend');
+  if (!input || !out || !btn) return;
+
+  const getCookie = (name) => {
+    const v = `; ${document.cookie}`;
+    const parts = v.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+  };
+
+  async function send() {
+    const msg = (input.value || '').trim();
+    if (!msg) return;
+    out.textContent = 'Thinking...';
+    const fd = new FormData();
+    fd.append('message', msg);
+    const res = await fetch("{% url 'assistant_api' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: fd
+    });
+    const data = await res.json();
+    out.textContent = data.reply || 'No reply.';
+  }
+
+  btn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+})();
+</script>
+{% endblock %}
+

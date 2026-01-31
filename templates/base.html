@@ -8,39 +8,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<header class="navbar">
-    <div class="nav-inner">
-        <div class="nav-left">
-            <a href="{% url 'home' %}" class="brand">CURA</a>
+<header class="app-header">
+    <div class="app-nav">
+        <div class="app-nav-left">
+            <a href="{% url 'home' %}" class="brand">
+                <span class="brand-mark" aria-hidden="true">+</span>
+                <span class="brand-text">CURA</span>
+            </a>
             {% if user.is_authenticated %}
-                <span class="nav-user">Hello, {{ user.username }}</span>
-                <a href="{% url 'dashboard' %}" class="btn btn-primary nav-dashboard-btn">Dashboard</a>
+                <span class="nav-user">Signed in as <strong>{{ user.username }}</strong></span>
             {% endif %}
         </div>
-        <nav class="nav-links">
+
+        <nav class="app-nav-center" aria-label="Primary">
             {% if user.is_authenticated %}
-                <div class="nav-dropdown">
-                    <button class="nav-dropbtn">Resources ▾</button>
-                    <div class="nav-dropdown-content">
-                        <a href="{% url 'hospital_list' %}">Hospital Beds</a>
-                        <a href="{% url 'doctor_search' %}">Doctors</a>
-                        <a href="{% url 'medicine_search' %}">Medicines</a>
-                        <a href="{% url 'oxygen_list' %}">Oxygen Cylinders</a>
+                <a href="{% url 'dashboard' %}" class="nav-item">Dashboard</a>
+
+                <details class="nav-dd">
+                    <summary class="nav-item nav-dd-summary">Resources</summary>
+                    <div class="nav-dd-panel" role="menu">
+                        <a role="menuitem" href="{% url 'hospital_list' %}">Hospital beds</a>
+                        <a role="menuitem" href="{% url 'doctor_search' %}">Doctors</a>
+                        <a role="menuitem" href="{% url 'medicine_search' %}">Medicines</a>
+                        <a role="menuitem" href="{% url 'oxygen_list' %}">Oxygen</a>
                     </div>
-                </div>
-                <a href="{% url 'emergency_contacts' %}">Emergency</a>
-                <a href="{% url 'support_request_create' %}">24/7 Support</a>
+                </details>
+
+                <a href="{% url 'emergency_contacts' %}" class="nav-item">Emergency</a>
+                <a href="{% url 'support_request_create' %}" class="nav-item">Support</a>
+                {% if current_role == 'PATIENT' %}
+                    <a href="{% url 'cart_detail' %}" class="nav-item">
+                        Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'home' %}" class="nav-item">Home</a>
             {% endif %}
         </nav>
-        <div class="nav-auth">
+
+        <div class="app-nav-right">
             {% if user.is_authenticated %}
-                <a href="{% url 'notifications_list' %}" class="nav-link">Notifications</a>
-                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+                <a href="{% url 'notifications_list' %}" class="nav-item nav-item-muted">Notifications</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline">Logout</button>
+                </form>
             {% else %}
                 <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
-                <a href="{% url 'register' %}" class="nav-link">Register</a>
+                <a href="{% url 'register' %}" class="btn btn-ghost">Register</a>
             {% endif %}
         </div>
+
+        <details class="app-nav-mobile" aria-label="Mobile menu">
+            <summary class="nav-burger" aria-label="Open menu">
+                <span class="nav-burger-lines" aria-hidden="true"></span>
+            </summary>
+            <div class="app-nav-mobile-panel">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="nav-mobile-item">Dashboard</a>
+                    <a href="{% url 'hospital_list' %}" class="nav-mobile-item">Hospital beds</a>
+                    <a href="{% url 'doctor_search' %}" class="nav-mobile-item">Doctors</a>
+                    <a href="{% url 'medicine_search' %}" class="nav-mobile-item">Medicines</a>
+                    <a href="{% url 'oxygen_list' %}" class="nav-mobile-item">Oxygen</a>
+                    <a href="{% url 'emergency_contacts' %}" class="nav-mobile-item">Emergency</a>
+                    <a href="{% url 'support_request_create' %}" class="nav-mobile-item">Support</a>
+                    {% if current_role == 'PATIENT' %}
+                        <a href="{% url 'cart_detail' %}" class="nav-mobile-item">
+                            Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}
+                        </a>
+                    {% endif %}
+                    <div class="nav-mobile-divider"></div>
+                    <a href="{% url 'notifications_list' %}" class="nav-item">Notifications</a>
+                    <form action="{% url 'logout' %}" method="post" style="display:block; width:100%;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-mobile-item nav-mobile-danger" style="width:100%; text-align:left; background:none; border:none; padding: 12px 16px; font:inherit; cursor:pointer;">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'home' %}" class="nav-mobile-item">Home</a>
+                    <a href="{% url 'login' %}" class="nav-mobile-item">Login</a>
+                    <a href="{% url 'register' %}" class="nav-mobile-item">Register</a>
+                {% endif %}
+            </div>
+        </details>
     </div>
 </header>
 
@@ -57,10 +106,132 @@
 
 <footer class="footer">
     <div class="footer-inner">
-        <span>&copy; {% now "Y" %} CURA - Hospital Resource Availability &amp; Healthcare Assistance Platform</span>
-        <span class="footer-right">Built with Django &amp; SQLite</span>
+        <div class="footer-left">
+            <div class="footer-brand">CURA</div>
+            <div class="footer-sub">&copy; {% now "Y" %} Hospital Resource Availability &amp; Healthcare Assistance Platform</div>
+        </div>
+        <div class="footer-right">
+            <div>Built with Django</div>
+            <div class="footer-sub">Secure, fast, and accessible by design</div>
+        </div>
     </div>
 </footer>
+
+<!-- CURA Assistant Widget (site-wide, Django-backed) -->
+<div class="assistant-widget" id="assistantWidget">
+    <details class="assistant-panel" id="assistantPanel">
+        <summary class="assistant-fab" aria-label="Open CURA Assistant">
+            <span class="assistant-fab-dot" aria-hidden="true"></span>
+            <span class="assistant-fab-label">Help</span>
+        </summary>
+        <div class="assistant-card" role="dialog" aria-label="CURA Assistant">
+            <div class="assistant-top">
+                <div class="assistant-title">
+                    <div class="assistant-badge">CURA</div>
+                    <div>
+                        <div class="assistant-name">Assistant</div>
+                        <div class="assistant-sub">Live guidance &amp; platform updates</div>
+                    </div>
+                </div>
+                <a class="assistant-link" href="{% url 'assistant_home' %}">Open</a>
+            </div>
+            <div class="assistant-feed" id="assistantFeed">
+                <div class="assistant-msg assistant-msg-bot">
+                    <div class="assistant-bubble">
+                        Ask me about CURA (beds, doctors, oxygen, medicines) or type <strong>stats</strong> for real-time updates.
+                    </div>
+                </div>
+            </div>
+            <div class="assistant-actions" id="assistantSuggestions">
+                <button type="button" class="assistant-chip" data-msg="Show live stats">Live stats</button>
+                <button type="button" class="assistant-chip" data-msg="How does CURA work?">How it works</button>
+                <button type="button" class="assistant-chip" data-msg="Emergency help">Emergency</button>
+            </div>
+            <form class="assistant-form" id="assistantForm" autocomplete="off">
+                <input class="assistant-input" id="assistantInput" placeholder="Type your question…" />
+                <button class="btn btn-primary" type="submit">Send</button>
+            </form>
+        </div>
+    </details>
+</div>
+
+<script>
+(() => {
+  const panel = document.getElementById('assistantPanel');
+  const form = document.getElementById('assistantForm');
+  const input = document.getElementById('assistantInput');
+  const feed = document.getElementById('assistantFeed');
+  const sugg = document.getElementById('assistantSuggestions');
+  if (!panel || !form || !input || !feed || !sugg) return;
+
+  const getCookie = (name) => {
+    const v = `; ${document.cookie}`;
+    const parts = v.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+  };
+
+  const addMsg = (who, html) => {
+    const wrap = document.createElement('div');
+    wrap.className = `assistant-msg ${who === 'user' ? 'assistant-msg-user' : 'assistant-msg-bot'}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'assistant-bubble';
+    bubble.innerHTML = html;
+    wrap.appendChild(bubble);
+    feed.appendChild(wrap);
+    feed.scrollTop = feed.scrollHeight;
+  };
+
+  const setSuggestions = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return;
+    sugg.innerHTML = '';
+    items.slice(0, 4).forEach((t) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'assistant-chip';
+      b.dataset.msg = t;
+      b.textContent = t;
+      sugg.appendChild(b);
+    });
+  };
+
+  async function send(msg) {
+    const text = (msg ?? input.value ?? '').trim();
+    if (!text) return;
+    addMsg('user', text.replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
+    input.value = '';
+
+    const fd = new FormData();
+    fd.append('message', text);
+    let data = null;
+    try {
+      const res = await fetch("{% url 'assistant_api' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd
+      });
+      data = await res.json();
+    } catch (e) {
+      addMsg('bot', 'I could not reach the assistant right now. Please try again.');
+      return;
+    }
+    addMsg('bot', (data && data.reply) ? data.reply.replaceAll('\n', '<br>') : 'No reply.');
+    if (data && data.suggestions) setSuggestions(data.suggestions);
+  }
+
+  form.addEventListener('submit', (e) => { e.preventDefault(); send(); });
+  sugg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-msg]');
+    if (!btn) return;
+    send(btn.dataset.msg);
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') panel.removeAttribute('open');
+  });
+})();
+</script>
 
 </body>
 </html>

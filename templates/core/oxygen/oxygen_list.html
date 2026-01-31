@@ -1,47 +1,88 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Oxygen Cylinder Availability</h2>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Oxygen availability</h2>
+        <p class="page-subtitle">Browse suppliers by city and book available cylinders in a few clicks.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'patient_dashboard' %}">Back to dashboard</a>
+    </div>
+</div>
 
-<form method="get" class="form-inline">
-    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
-    <button type="submit" class="btn">Filter</button>
-</form>
+<section class="card filters-card card-hero">
+    <div class="media">
+        <div class="avatar"><img src="{% static 'img/oxygen-tank.svg' %}" alt="Oxygen"></div>
+        <div>
+            <div style="font-weight:900; letter-spacing:-0.2px;">Filter suppliers</div>
+            <div class="card-muted">Filter by city to find the fastest delivery options.</div>
+        </div>
+    </div>
+    <form method="get" class="filters-grid" style="margin-top:12px; grid-template-columns: 1fr auto;">
+        <div>
+            <label>City</label>
+            <input type="text" name="city" placeholder="e.g. Bengaluru" value="{{ selected_city }}">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </div>
+    </form>
+</section>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Supplier</th>
-            <th>City</th>
-            <th>Contact</th>
-            <th>Delivery</th>
-            <th>Stocks</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for s in suppliers %}
-        <tr>
-            <td>{{ s.name }}</td>
-            <td>{{ s.city }}</td>
-            <td>{{ s.contact_phone }}</td>
-            <td>{{ s.delivery_available|yesno:"Yes,No" }}</td>
-            <td>
-                {% for st in s.stocks.all %}
-                    <div>
-                        {{ st.capacity_litres }}L - ₹{{ st.price_per_cylinder }} -
-                        {{ st.available_cylinders }} available
-                        {% if user.is_authenticated and current_role == 'PATIENT' and st.available_cylinders > 0 %}
-                            <a href="{% url 'oxygen_booking_create' st.id %}" class="btn-small">Book</a>
-                        {% endif %}
-                    </div>
-                {% empty %}
-                    <div>No stocks.</div>
-                {% endfor %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">No suppliers found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="resource-grid">
+    {% for s in suppliers %}
+    <section class="card resource-card">
+        <div class="resource-top">
+            <div class="media" style="align-items:flex-start;">
+                <div class="avatar"><img src="{% static 'img/oxygen-tank.svg' %}" alt="Supplier"></div>
+                <div>
+                    <h3 class="resource-title">{{ s.name }}</h3>
+                    <p class="resource-sub">{{ s.city }}{% if s.contact_phone %} • <a class="emergency-call"
+                            href="tel:{{ s.contact_phone }}">{{ s.contact_phone }}</a>{% endif %}</p>
+                </div>
+            </div>
+            <span class="badge {% if s.delivery_available %}badge-success{% else %}badge{% endif %}">Delivery: {{
+                s.delivery_available|yesno:"Yes,No" }}</span>
+        </div>
+
+        <ul class="mini-list">
+            {% for st in s.stocks.all %}
+            <li class="mini-row">
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
+                    <span><strong>{{ st.capacity_litres }}L (₹{{ st.price_per_cylinder }})</strong></span>
+                    <span
+                        class="{% if st.available_cylinders > 0 %}badge badge-success{% else %}badge badge-danger{% endif %}">{{
+                        st.available_cylinders }} available</span>
+                </div>
+                {% if user.is_authenticated and current_role == 'PATIENT' %}
+                {% if st.available_cylinders > 0 %}
+                <a class="btn btn-small btn-primary" href="{% url 'oxygen_booking_create' st.id %}">Book</a>
+                {% else %}
+                <span class="badge badge-danger">Out of Stock</span>
+                {% endif %}
+                {% endif %}
+            </li>
+            {% empty %}
+            <li class="mini-row"><span class="muted">No stocks</span><span class="badge">—</span></li>
+            {% endfor %}
+        </ul>
+
+        <div class="resource-actions">
+            {% if not user.is_authenticated %}
+            <a class="btn btn-small btn-outline" href="{% url 'login' %}">Login to book</a>
+            {% endif %}
+            <a class="btn btn-small btn-outline" href="{% url 'support_request_create' %}">Contact support</a>
+        </div>
+    </section>
+    {% empty %}
+    <section class="card">
+        <div class="card-header">
+            <h3>No suppliers found</h3>
+            <span class="pill-status">Try filters</span>
+        </div>
+        <div class="empty">Try a different city or clear the filter to browse all suppliers.</div>
+    </section>
+    {% endfor %}
+</div>
 {% endblock %}
-

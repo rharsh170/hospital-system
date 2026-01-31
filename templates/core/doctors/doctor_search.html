@@ -1,45 +1,82 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Search Doctors</h2>
-<form method="get" class="form-inline">
-    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
-    <select name="speciality">
-        <option value="">All Specialities</option>
-        <option value="Cardiology" {% if selected_speciality == 'Cardiology' %}selected{% endif %}>Cardiology</option>
-        <option value="Neurology" {% if selected_speciality == 'Neurology' %}selected{% endif %}>Neurology</option>
-        <option value="Orthopedics" {% if selected_speciality == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
-        <option value="General" {% if selected_speciality == 'General' %}selected{% endif %}>General Physician</option>
-    </select>
-    <button type="submit" class="btn">Search</button>
-</form>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Find a doctor</h2>
+        <p class="page-subtitle">Browse by speciality and city. Open a profile to book an appointment.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'patient_dashboard' %}">Back to dashboard</a>
+    </div>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Speciality</th>
-            <th>Hospital</th>
-            <th>City</th>
-            <th>Fee</th>
-            <th>Languages</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for d in doctors %}
-        <tr>
-            <td>{{ d.name }}</td>
-            <td>{{ d.speciality }}</td>
-            <td>{{ d.hospital.name }}</td>
-            <td>{{ d.city }}</td>
-            <td>₹{{ d.consultation_fee }}</td>
-            <td>{{ d.languages_spoken }}</td>
-            <td><a href="{% url 'doctor_detail' d.id %}" class="btn-small">Details</a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="7">No doctors found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<section class="card filters-card card-hero">
+    <div class="media">
+        <div class="avatar"><img src="{% static 'img/doctor-avatar.svg' %}" alt="Doctor"></div>
+        <div>
+            <div style="font-weight:900; letter-spacing:-0.2px;">Search filters</div>
+            <div class="card-muted">Try “City + Speciality” for faster results.</div>
+        </div>
+    </div>
+    <form method="get" class="filters-grid" style="margin-top:12px; grid-template-columns: 1fr 240px auto;">
+        <div>
+            <label>City</label>
+            <input type="text" name="city" placeholder="e.g. Delhi" value="{{ selected_city }}">
+        </div>
+        <div>
+            <label>Speciality</label>
+            <select name="speciality">
+                <option value="">All</option>
+                <option value="Cardiology" {% if selected_speciality == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+                <option value="Neurology" {% if selected_speciality == 'Neurology' %}selected{% endif %}>Neurology</option>
+                <option value="Orthopedics" {% if selected_speciality == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
+                <option value="General" {% if selected_speciality == 'General' %}selected{% endif %}>General Physician</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+</section>
+
+<div class="resource-grid">
+    {% for d in doctors %}
+        <section class="card resource-card">
+            <div class="resource-top">
+                <div class="media" style="align-items:flex-start;">
+                    <div class="avatar"><img src="{% static 'img/doctor-avatar.svg' %}" alt="Doctor"></div>
+                    <div>
+                        <h3 class="resource-title">Dr. {{ d.name }}</h3>
+                        <p class="resource-sub">{{ d.speciality }} • {{ d.city }}</p>
+                    </div>
+                </div>
+                <span class="badge badge-primary">₹{{ d.consultation_fee }}</span>
+            </div>
+
+            <div class="resource-meta">
+                <span class="badge">Hospital: {{ d.hospital.name }}</span>
+                {% if d.languages_spoken %}<span class="badge">Languages: {{ d.languages_spoken }}</span>{% endif %}
+            </div>
+
+            <div class="resource-actions">
+                <a class="btn btn-small btn-outline" href="{% url 'doctor_detail' d.id %}">View profile</a>
+                {% if user.is_authenticated and current_role == 'PATIENT' %}
+                    <a class="btn btn-small btn-primary" href="{% url 'book_appointment' d.id %}">Book</a>
+                {% else %}
+                    <span class="btn btn-small btn-ghost" style="opacity:.7;">Login to book</span>
+                {% endif %}
+            </div>
+        </section>
+    {% empty %}
+        <section class="card">
+            <div class="card-header">
+                <h3>No doctors found</h3>
+                <span class="pill-status">Try different filters</span>
+            </div>
+            <div class="empty">Try changing city or speciality, or remove one filter.</div>
+        </section>
+    {% endfor %}
+</div>
 {% endblock %}
 

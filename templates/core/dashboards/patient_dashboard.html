@@ -18,60 +18,127 @@
     </div>
 </div>
 
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Appointments</div>
+        <div class="kpi-value">{% if appointments %}{{ appointments|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Upcoming snapshot</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Medicine orders</div>
+        <div class="kpi-value">{% if medicine_orders %}{{ medicine_orders|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Recent orders</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Oxygen bookings</div>
+        <div class="kpi-value">{% if oxygen_bookings %}{{ oxygen_bookings|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Recent bookings</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Bed Bookings</div>
+        <div class="kpi-value">{% if bed_bookings %}{{ bed_bookings|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Hospital beds</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Support</div>
+        <div class="kpi-value">24/7</div>
+        <div class="kpi-meta"><a class="emergency-call" href="{% url 'support_request_create' %}">Create request</a>
+        </div>
+    </div>
+</div>
+
 <div class="dashboard-grid">
     <section class="dash-card">
         <div class="dash-card-header">
-            <h3>Upcoming appointments</h3>
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/doctor-avatar.svg' %}" alt="Doctors"></div>
+                <h3>Upcoming appointments</h3>
+            </div>
             <span class="pill-status">
                 {% if appointments %}{{ appointments|length }} scheduled{% else %}None yet{% endif %}
             </span>
         </div>
         <ul class="dash-list">
             {% for a in appointments %}
-                <li>
-                    <span class="dash-list-main">Dr. {{ a.doctor.name }} • {{ a.date }} {{ a.time_slot }}</span>
-                    <span class="dash-list-meta">{{ a.status }}</span>
-                </li>
+            <li>
+                <span class="dash-list-main">Dr. {{ a.doctor.name }} • {{ a.date }} {{ a.time_slot }}</span>
+                <span class="dash-list-meta">{{ a.status }}</span>
+            </li>
             {% empty %}
-                <li class="dash-empty">No upcoming appointments. Book one now from the quick actions above.</li>
+            <li class="dash-empty">No upcoming appointments. Book one now from the quick actions above.</li>
             {% endfor %}
         </ul>
     </section>
 
     <section class="dash-card">
         <div class="dash-card-header">
-            <h3>Recent medicine orders</h3>
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/medicine-pill.svg' %}" alt="Medicines"></div>
+                <h3>Recent medicine orders</h3>
+            </div>
             <span class="pill-status">
                 {% if medicine_orders %}{{ medicine_orders|length }} recent{% else %}No orders{% endif %}
             </span>
         </div>
         <ul class="dash-list">
             {% for o in medicine_orders %}
-                <li>
-                    <span class="dash-list-main">Order #{{ o.id }} • {{ o.pharmacy.name }}</span>
-                    <span class="dash-list-meta">{{ o.status }}</span>
-                </li>
+            <li>
+                <span class="dash-list-main">Order #{{ o.id }} • {{ o.pharmacy.name }}</span>
+                <span class="dash-list-meta">{{ o.status }}</span>
+            </li>
             {% empty %}
-                <li class="dash-empty">You haven’t placed any medicine orders yet.</li>
+            <li class="dash-empty">You haven’t placed any medicine orders yet.</li>
             {% endfor %}
         </ul>
     </section>
 
     <section class="dash-card">
         <div class="dash-card-header">
-            <h3>Oxygen bookings</h3>
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/oxygen-tank.svg' %}" alt="Oxygen"></div>
+                <h3>Oxygen bookings</h3>
+            </div>
             <span class="pill-status">
                 {% if oxygen_bookings %}{{ oxygen_bookings|length }} recent{% else %}No bookings{% endif %}
             </span>
         </div>
         <ul class="dash-list">
             {% for b in oxygen_bookings %}
-                <li>
-                    <span class="dash-list-main">Booking #{{ b.id }} • {{ b.stock.supplier.name }}</span>
-                    <span class="dash-list-meta">{{ b.status }}</span>
-                </li>
+            <li>
+                <span class="dash-list-main">Booking #{{ b.id }} • {{ b.stock.supplier.name }} <small>({{
+                        b.stock.capacity_litres }}L • ₹{{ b.stock.price_per_cylinder }})</small></span>
+                <span
+                    class="badge {% if b.status == 'CONFIRMED' %}badge-success{% elif b.status == 'PENDING' %}badge-warning{% else %}badge-danger{% endif %}">{{
+                    b.status }}</span>
+                <br><small>{{ b.scheduled_date }} at {{ b.time_slot|default:"N/A" }} ({{ b.get_payment_option_display
+                    }})</small>
+            </li>
             {% empty %}
-                <li class="dash-empty">No oxygen bookings yet.</li>
+            <li class="dash-empty">No oxygen bookings yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="dash-card">
+        <div class="dash-card-header">
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Beds"></div>
+                <h3>Bed bookings</h3>
+            </div>
+            <span class="pill-status">
+                {% if bed_bookings %}{{ bed_bookings|length }} recent{% else %}No bookings{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for b in bed_bookings %}
+            <li>
+                <span class="dash-list-main">{{ b.hospital_bed.get_bed_type_display }} • {{
+                    b.hospital_bed.hospital.name }}</span>
+                <span class="dash-list-meta">{{ b.status }}</span>
+                <br><small>{{ b.booking_date }} at {{ b.time_slot }} ({{ b.get_payment_option_display }})</small>
+            </li>
+            {% empty %}
+            <li class="dash-empty">No bed bookings yet.</li>
             {% endfor %}
         </ul>
     </section>
@@ -79,18 +146,36 @@
 
 <section class="dash-card dash-notifications">
     <div class="dash-card-header">
-        <h3>Recent notifications</h3>
+        <div class="media">
+            <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Updates"></div>
+            <h3>Recent notifications</h3>
+        </div>
+        <a class="btn btn-small btn-outline" href="{% url 'notifications_list' %}">View all</a>
     </div>
     <ul class="dash-list">
         {% for n in notifications %}
-            <li {% if not n.is_read %}class="dash-unread"{% endif %}>
-                <span class="dash-list-main">{{ n.message }}</span>
-                <span class="dash-list-meta">{{ n.created_at|date:"d M Y H:i" }}</span>
-            </li>
+        <li {% if not n.is_read %}class="dash-unread" {% endif %}>
+            <span class="dash-list-main">{{ n.message }}</span>
+            <span class="dash-list-meta">{{ n.created_at|date:"d M Y H:i" }}</span>
+        </li>
         {% empty %}
-            <li class="dash-empty">You’ll see appointment reminders, booking updates and more here.</li>
+        <li class="dash-empty">You’ll see appointment reminders, booking updates and more here.</li>
         {% endfor %}
     </ul>
 </section>
-{% endblock %}
 
+<section class="card card-hero" style="margin-top:14px;">
+    <div class="card-header">
+        <h3>Need help navigating CURA?</h3>
+        <span class="pill-status">Assistant</span>
+    </div>
+    <div class="card-muted">
+        Use the <strong>Help</strong> button (bottom-right) to ask questions, see live stats, and learn how each feature
+        works.
+    </div>
+    <div class="resource-actions" style="margin-top:12px;">
+        <a class="btn btn-primary" href="{% url 'assistant_home' %}">Open CURA Assistant</a>
+        <a class="btn btn-outline" href="{% url 'emergency_contacts' %}">Emergency contacts</a>
+    </div>
+</section>
+{% endblock %}

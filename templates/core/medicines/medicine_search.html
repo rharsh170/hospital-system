@@ -1,43 +1,103 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Search Essential Medicines</h2>
-<form method="get" class="form-inline">
-    <input type="text" name="name" placeholder="Medicine name" value="{{ selected_name }}">
-    <input type="text" name="city" placeholder="City" value="{{ selected_city }}">
-    <button type="submit" class="btn">Search</button>
-</form>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Find medicines</h2>
+        <p class="page-subtitle">Search by medicine name and pharmacy city. Stock and essentials are shown live.</p>
+    </div>
+    <div>
+        <a class="btn btn-outline" href="{% url 'patient_dashboard' %}">Back to dashboard</a>
+    </div>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Medicine</th>
-            <th>Pharmacy</th>
-            <th>City</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Essential</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for m in medicines %}
-        <tr>
-            <td>{{ m.name }}</td>
-            <td>{{ m.pharmacy.name }}</td>
-            <td>{{ m.pharmacy.city }}</td>
-            <td>₹{{ m.price }}</td>
-            <td>{{ m.stock }}</td>
-            <td>{{ m.is_essential|yesno:"Yes,No" }}</td>
-            <td>
+<section class="card filters-card card-hero">
+    <div class="media">
+        <div class="avatar"><img src="{% static 'img/medicine-pill.svg' %}" alt="Medicines"></div>
+        <div>
+            <div style="font-weight:900; letter-spacing:-0.2px;">Search filters</div>
+            <div class="card-muted">Try a partial name (e.g. “para”) and a city.</div>
+        </div>
+    </div>
+    <form method="get" class="filters-grid" style="margin-top:12px; grid-template-columns: 1fr 1fr auto;">
+        <div>
+            <label>Medicine name</label>
+            <input type="text" name="name" placeholder="e.g. Paracetamol" value="{{ selected_name }}">
+        </div>
+        <div>
+            <label>City</label>
+            <input type="text" name="city" placeholder="e.g. Pune" value="{{ selected_city }}">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+</section>
+
+<div class="resource-grid">
+    {% for m in medicines %}
+        <section class="card resource-card">
+            <div class="resource-top">
+                <div class="media" style="align-items:flex-start;">
+                    <div class="avatar">
+                        {% if m.image_url %}
+                            <img src="{{ m.image_url }}" alt="{{ m.name }}">
+                        {% else %}
+                            <img src="{% static 'img/medicine-pill.svg' %}" alt="Medicine">
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h3 class="resource-title">{{ m.name }}</h3>
+                        <p class="resource-sub">
+                            {% if m.brand %}{{ m.brand }} • {% endif %}
+                            {{ m.pharmacy.name }} • {{ m.pharmacy.city }}
+                        </p>
+                        {% if m.strength or m.form %}
+                            <p class="resource-sub" style="font-size:12px;">
+                                {% if m.strength %}{{ m.strength }}{% endif %}
+                                {% if m.form %} • {{ m.form }}{% endif %}
+                                {% if m.pack_size %} • {{ m.pack_size }} units / pack{% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="badge badge-primary">₹{{ m.price }} <span class="muted">/ pack</span></span>
+            </div>
+
+            <div class="resource-meta">
+                <span class="badge {% if m.stock > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                    Stock: {{ m.stock }} pack{{ m.stock|pluralize }}
+                </span>
+                <span class="badge {% if m.is_essential %}badge-primary{% endif %}">
+                    Essential: {{ m.is_essential|yesno:"Yes,No" }}
+                </span>
+            </div>
+
+            <div class="resource-actions">
                 {% if user.is_authenticated and current_role == 'PATIENT' and m.stock > 0 %}
-                    <a href="{% url 'medicine_order_create' m.id %}" class="btn-small">Order</a>
+                    <form method="post" action="{% url 'cart_add' m.id %}" class="cart-inline-form">
+                        {% csrf_token %}
+                        <input type="number" name="quantity" min="1" max="{{ m.stock }}" value="1" class="cart-qty-input" aria-label="Number of packs">
+                        <button type="submit" class="btn btn-small btn-primary">Add to cart</button>
+                    </form>
+                    <a class="btn btn-small btn-outline" href="{% url 'medicine_order_create' m.id %}">Buy now</a>
+                {% elif user.is_authenticated and current_role == 'PATIENT' and m.stock <= 0 %}
+                    <span class="btn btn-small btn-ghost" style="opacity:.7;">Out of stock</span>
+                {% else %}
+                    <a class="btn btn-small btn-outline" href="{% url 'login' %}">Login to order</a>
                 {% endif %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="7">No medicines found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+                <a class="btn btn-small btn-ghost" href="{% url 'support_request_create' %}">Need help?</a>
+            </div>
+        </section>
+    {% empty %}
+        <section class="card">
+            <div class="card-header">
+                <h3>No medicines found</h3>
+                <span class="pill-status">Try search</span>
+            </div>
+            <div class="empty">Try a different name/city, or leave filters empty to browse all.</div>
+        </section>
+    {% endfor %}
+</div>
 {% endblock %}
 

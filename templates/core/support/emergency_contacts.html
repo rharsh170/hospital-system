@@ -1,13 +1,115 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Emergency Contacts</h2>
-<ul>
-    <li>National Emergency Number: 112</li>
-    <li>Ambulance: 102 / 108</li>
-    <li>Fire: 101</li>
-    <li>Police: 100</li>
-</ul>
-<p>For urgent medical emergencies, call the numbers above and/or submit an emergency support request.</p>
-<a href="{% url 'support_request_create' %}" class="btn">Submit Support Request</a>
+<div class="emergency-hero">
+    <div class="emergency-hero-main">
+        <div class="emergency-tag">Emergency • Act fast • Stay calm</div>
+        <h2 class="emergency-title">Emergency help &amp; critical contacts</h2>
+        <p class="emergency-subtitle">
+            If someone is in immediate danger, call the official numbers first. Then use CURA support to track and coordinate help.
+        </p>
+        <div class="emergency-cta">
+            <a href="{% url 'support_request_create' %}" class="btn btn-primary">Submit emergency support request</a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to dashboard</a>
+        </div>
+        <div class="emergency-note">
+            Tip: On mobile, tap a number to call.
+        </div>
+    </div>
+    <div class="emergency-hero-visual">
+        <img src="{% static 'img/emergency-hero.svg' %}" alt="Emergency assistance" class="emergency-hero-img">
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">National emergency</div>
+        <div class="kpi-value"><a class="emergency-call" href="tel:112">112</a></div>
+        <div class="kpi-meta">Single number for urgent situations</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Ambulance</div>
+        <div class="kpi-value">
+            <a class="emergency-call" href="tel:102">102</a>
+            <span class="emergency-sep">/</span>
+            <a class="emergency-call" href="tel:108">108</a>
+        </div>
+        <div class="kpi-meta">Medical transport &amp; dispatch</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Fire</div>
+        <div class="kpi-value"><a class="emergency-call" href="tel:101">101</a></div>
+        <div class="kpi-meta">Fire, smoke, hazardous risk</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Police</div>
+        <div class="kpi-value"><a class="emergency-call" href="tel:100">100</a></div>
+        <div class="kpi-meta">Threats, safety, enforcement</div>
+    </div>
+</div>
+
+<div class="emergency-grid">
+    <section class="card">
+        <div class="card-header">
+            <h3>What to do right now</h3>
+            <span class="pill-status">Checklist</span>
+        </div>
+        <ol class="emergency-steps">
+            <li><strong>Call 112 / 108</strong> if there’s immediate danger or severe symptoms.</li>
+            <li><strong>Share location clearly</strong>: landmark, address, nearest hospital.</li>
+            <li><strong>Basic first aid</strong>: keep airway clear, stop bleeding with pressure, do not move spinal injury.</li>
+            <li><strong>Use CURA</strong>: submit a support request for coordination and updates.</li>
+        </ol>
+        <div class="emergency-actions">
+            <a class="btn btn-outline" href="{% url 'hospital_list' %}">Find nearby hospital beds</a>
+            <a class="btn btn-outline" href="{% url 'doctor_search' %}">Find a doctor</a>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>When to use CURA support</h3>
+            <span class="pill-status">Guidance</span>
+        </div>
+        <div class="emergency-callouts">
+            <div class="emergency-callout">
+                <div class="emergency-callout-title">Non-immediate but urgent</div>
+                <div class="card-muted">Shortness of breath, high fever, worsening pain — after calling ambulance if needed.</div>
+            </div>
+            <div class="emergency-callout">
+                <div class="emergency-callout-title">Resource coordination</div>
+                <div class="card-muted">Need beds/oxygen/medicines fast? CURA helps you search and request support.</div>
+            </div>
+            <div class="emergency-callout">
+                <div class="emergency-callout-title">Updates &amp; tracking</div>
+                <div class="card-muted">CURA notifications keep your requests visible and organized.</div>
+            </div>
+        </div>
+        <div style="margin-top:12px;">
+            <a href="{% url 'support_request_create' %}" class="btn btn-primary">Create support request</a>
+        </div>
+    </section>
+</div>
+
+<section class="card" style="margin-top:14px;">
+    <div class="card-header">
+        <h3>Quick safety tips</h3>
+        <span class="pill-status">Read</span>
+    </div>
+    <div class="emergency-tips">
+        <details class="emergency-tip">
+            <summary>Chest pain or breathing issues</summary>
+            <div class="card-muted">Call ambulance. Sit upright, loosen tight clothing, avoid exertion.</div>
+        </details>
+        <details class="emergency-tip">
+            <summary>Bleeding / injury</summary>
+            <div class="card-muted">Apply direct pressure, elevate if possible, keep the person warm.</div>
+        </details>
+        <details class="emergency-tip">
+            <summary>High fever / dehydration</summary>
+            <div class="card-muted">Provide fluids if conscious, use cool compress, seek care if symptoms worsen.</div>
+        </details>
+    </div>
+</section>
 {% endblock %}
 

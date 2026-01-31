@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p>Manage pending requests and platform overview.</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ appointments.count }}</div>
+            <div class="stat-label">Pending Appointments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ orders.count }}</div>
+            <div class="stat-label">Pending Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ oxygen_bookings.count }}</div>
+            <div class="stat-label">Oxygen Requests</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ support_requests.count }}</div>
+            <div class="stat-label">Support Tickets</div>
+        </div>
+    </div>
+
+    <!-- Pending Appointments -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Appointments to Confirm</h2>
+        </div>
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <span class="user-name">{{ appt.patient.username }}</span>
+                                <small class="user-role">{{ appt.patient.userprofile.phone }}</small>
+                            </div>
+                        </td>
+                        <td>{{ appt.doctor.name }}<br><small>{{ appt.doctor.speciality }}</small></td>
+                        <td>{{ appt.date }} <br> <small>{{ appt.time_slot }}</small></td>
+                        <td><span class="badge badge-warning">{{ appt.status }}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <form action="{% url 'admin_update_appointment_status' appt.id %}" method="post"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="status" value="CONFIRMED"
+                                        class="btn btn-sm btn-success">Approve</button>
+                                    <button type="submit" name="status" value="CANCELLED"
+                                        class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No pending appointments.</p>
+        {% endif %}
+    </section>
+
+    <!-- Pending Medicine Orders -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Medicine Orders to Process</h2>
+        </div>
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Patient</th>
+                        <th>Pharmacy</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>
+                            <div class="user-info">
+                                <span class="user-name">{{ order.patient.username }}</span>
+                                <small>{{ order.contact_phone }}</small>
+                            </div>
+                        </td>
+                        <td>{{ order.pharmacy.name }}</td>
+                        <td><span class="badge badge-warning">{{ order.status }}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <form action="{% url 'admin_update_medicine_order_status' order.id %}" method="post"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="status" value="CONFIRMED"
+                                        class="btn btn-sm btn-success">Approve</button>
+                                    <button type="submit" name="status" value="CANCELLED"
+                                        class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No pending medicine orders.</p>
+        {% endif %}
+    </section>
+
+    <!-- Pending Bed Bookings -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Hospital Bed Requests</h2>
+        </div>
+        {% if bed_bookings %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient</th>
+                        <th>Hospital / Bed Type</th>
+                        <th>Date & Time</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bed_bookings %}
+                    <tr>
+                        <td>#{{ booking.id }}</td>
+                        <td>{{ booking.patient.username }}<br><small>{{ booking.patient.userprofile.phone }}</small>
+                        </td>
+                        <td>{{ booking.hospital_bed.hospital.name }}<br><small>{{
+                                booking.hospital_bed.get_bed_type_display }}</small></td>
+                        <td>{{ booking.booking_date }}<br><small>{{ booking.time_slot }}</small></td>
+                        <td>{{ booking.get_payment_option_display }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <form action="{% url 'admin_update_bed_booking_status' booking.id %}" method="post"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="status" value="CONFIRMED"
+                                        class="btn btn-sm btn-success">Approve</button>
+                                    <button type="submit" name="status" value="CANCELLED"
+                                        class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No pending bed bookings.</p>
+        {% endif %}
+    </section>
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Oxygen Requests</h2>
+        </div>
+        {% if oxygen_bookings %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient</th>
+                        <th>Supplier</th>
+                        <th>Quantity</th>
+                        <th>Date & Time</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in oxygen_bookings %}
+                    <tr>
+                        <td>#{{ booking.id }}</td>
+                        <td>{{ booking.patient.username }}<br><small>{{ booking.patient.userprofile.phone }}</small>
+                        </td>
+                        <td>{{ booking.stock.supplier.name }} <br><small>({{ booking.stock.capacity_litres }}L • ₹{{
+                                booking.stock.price_per_cylinder }})</small>
+                        </td>
+                        <td>{{ booking.quantity }}</td>
+                        <td>{{ booking.scheduled_date }}<br><small>{{ booking.time_slot|default:"N/A" }}</small></td>
+                        <td>{{ booking.get_payment_option_display }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <form action="{% url 'admin_update_oxygen_booking_status' booking.id %}" method="post"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="status" value="CONFIRMED"
+                                        class="btn btn-sm btn-success">Approve</button>
+                                    <button type="submit" name="status" value="CANCELLED"
+                                        class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No pending oxygen bookings.</p>
+        {% endif %}
+    </section>
+
+    <!-- Support Requests -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Open Support Tickets</h2>
+        </div>
+        {% if support_requests %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in support_requests %}
+                    <tr>
+                        <td>
+                            <strong>{{ req.subject }}</strong><br>
+                            <small>{{ req.description|truncatechars:50 }}</small>
+                        </td>
+                        <td>
+                            {% if req.user %}
+                            {{ req.user.username }}
+                            {% else %}
+                            {{ req.name }} (Guest)
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-info">{{ req.status }}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <form action="{% url 'admin_update_support_request_status' req.id %}" method="post"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="status" value="RESOLVED"
+                                        class="btn btn-sm btn-success">Mark Resolved</button>
+                                    <button type="submit" name="status" value="IN_PROGRESS"
+                                        class="btn btn-sm btn-primary">In Progress</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No open support tickets.</p>
+        {% endif %}
+    </section>
+
+</div>
+
+<style>
+    /* Dashboard specific styles */
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color, #2563eb);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .dashboard-section {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-header {
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.25rem;
+        color: #111827;
+        margin: 0;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .data-table th {
+        background-color: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-name {
+        font-weight: 500;
+        color: #111827;
+    }
+
+    .user-role {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .badge {
+        display: inline-flex;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge-warning {
+        background-color: #fffbeb;
+        color: #b45309;
+    }
+
+    .badge-success {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-info {
+        background-color: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-success {
+        background-color: #10b981;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger {
+        background-color: #ef4444;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
