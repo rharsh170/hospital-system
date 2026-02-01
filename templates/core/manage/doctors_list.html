@@ -1,0 +1,52 @@
+{% extends "base.html" %} {% block content %}
+
+<h1>Manage Doctors</h1>
+
+<div style="margin-bottom: 16px">
+  <a href="{% url 'create_doctor' %}" class="btn btn-primary"> + Add Doctor </a>
+</div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Speciality</th>
+      <th>Hospital</th>
+      <th>City</th>
+      <th>Fee</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for doctor in doctors %}
+    <tr>
+      <td>{{ doctor.name }}</td>
+      <td>{{ doctor.speciality }}</td>
+      <td>{{ doctor.hospital.name }}</td>
+      <td>{{ doctor.city }}</td>
+      <td>₹{{ doctor.consultation_fee }}</td>
+      <td>
+        {% if doctor.is_active %}
+        <span class="badge success">Active</span>
+        {% else %}
+        <span class="badge danger">Inactive</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="{% url 'edit_doctor' doctor.id %}">Edit</a> |
+        <a href="{% url 'toggle_doctor_status' doctor.id %}">
+          {% if doctor.is_active %}Deactivate{% else %}Activate{% endif %}
+        </a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="7">No doctors found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

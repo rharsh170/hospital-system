@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -17,6 +17,7 @@ from .forms import (
     OxygenBookingForm,
     PatientRegistrationForm,
     SupportRequestForm,
+    DoctorForm
 )
 from .models import (
     Appointment,
@@ -56,7 +57,7 @@ def register(request):
         form = PatientRegistrationForm()
     return render(request, 'core/register.html', {'form': form})
 
-
+"""
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -69,7 +70,96 @@ def login_view(request):
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid credentials')
+
+        
     return render(request, 'core/login.html')
+"""
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user:
+            login(request, user)
+
+            # 🔑 ROLE-BASED REDIRECT
+            if user.is_superuser:
+                return redirect('admin_dashboard')
+
+            elif user.is_staff:
+                return redirect('hospital_admin_dashboard')
+
+            else:
+                return redirect('patient_dashboard')
+
+        else:
+            messages.error(request, 'Invalid credentials')
+
+    return render(request, 'core/login.html')
+
+def is_super_admin(user):
+    return user.is_authenticated and user.is_superuser
+
+@login_required
+@user_passes_test(is_super_admin)
+def manage_doctors(request):
+    doctors = Doctor.objects.select_related('hospital').order_by('name')
+    return render(request, 'core/manage/doctors_list.html', {
+        'doctors': doctors
+    })
+
+@login_required
+@user_passes_test(is_super_admin)
+def edit_doctor(request, pk):
+    doctor = get_object_or_404(Doctor, pk=pk)
+
+    if request.method == 'POST':
+        form = DoctorForm(request.POST, instance=doctor)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Doctor updated successfully.')
+            return redirect('manage_doctors')
+    else:
+        form = DoctorForm(instance=doctor)
+
+    return render(request, 'core/manage/doctor_form.html', {
+        'form': form,
+        'title': 'Edit Doctor'
+    })
+
+@login_required
+@user_passes_test(is_super_admin)
+def toggle_doctor_status(request, pk):
+    doctor = get_object_or_404(Doctor, pk=pk)
+    doctor.is_active = not doctor.is_active
+    doctor.save()
+
+    status = "activated" if doctor.is_active else "deactivated"
+    messages.success(request, f'Doctor {status}.')
+    return redirect('manage_doctors')
+
+
+@login_required
+@user_passes_test(is_super_admin)
+def create_doctor(request):
+    if request.method == 'POST':
+        form = DoctorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Doctor created successfully.')
+            return redirect('manage_doctors')
+    else:
+        form = DoctorForm()
+
+    return render(request, 'core/manage/doctor_form.html', {
+        'form': form,
+        'title': 'Add Doctor'
+    })
 
 
 @require_POST
@@ -139,8 +229,23 @@ def patient_dashboard(request):
     })
 
 
+
 @login_required
-@staff_member_required
+@user_passes_test(lambda u: u.is_superuser)
+def create_doctor(request):
+    if request.method == 'POST':
+        form = DoctorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Doctor created successfully')
+            return redirect('manage_doctors')
+    else:
+        form = DoctorForm()
+
+    return render(request, 'core/manage/doctor_form.html', {'form': form})
+
+@login_required
+@user_passes_test(is_super_admin)
 @require_POST
 def admin_update_appointment_status(request, pk):
     appointment = get_object_or_404(Appointment, pk=pk)
@@ -161,7 +266,7 @@ def admin_update_appointment_status(request, pk):
 
 
 @login_required
-@staff_member_required
+@user_passes_test(is_super_admin)
 @require_POST
 def admin_update_medicine_order_status(request, pk):
     order = get_object_or_404(MedicineOrder, pk=pk)
@@ -182,7 +287,7 @@ def admin_update_medicine_order_status(request, pk):
 
 
 @login_required
-@staff_member_required
+@user_passes_test(is_super_admin)
 @require_POST
 def admin_update_oxygen_booking_status(request, pk):
     booking = get_object_or_404(OxygenBooking, pk=pk)
@@ -214,7 +319,7 @@ def admin_update_oxygen_booking_status(request, pk):
 
 
 @login_required
-@staff_member_required
+@user_passes_test(is_super_admin)
 @require_POST
 def admin_update_support_request_status(request, pk):
     support = get_object_or_404(SupportRequest, pk=pk)
@@ -274,7 +379,7 @@ def oxygen_supplier_dashboard(request):
 
 
 @login_required
-@staff_member_required
+@user_passes_test(is_super_admin)
 def admin_dashboard(request):
     # Fetch pending items for admin review
     appointments = Appointment.objects.filter(status='PENDING').select_related('doctor', 'patient').order_by('created_at')
@@ -382,7 +487,7 @@ def bed_booking_create(request, bed_id):
 
 
 @login_required
-@staff_member_required
+@user_passes_test(is_super_admin)
 @require_POST
 def admin_update_bed_booking_status(request, pk):
     booking = get_object_or_404(BedBooking, pk=pk)

@@ -10,9 +10,31 @@ from .models import (
     OxygenBooking,
     SupportRequest,
     UserProfile,
+    Doctor
 )
 
+class DoctorForm(forms.ModelForm):
+    class Meta:
+        model = Doctor
+        fields = [
+            'name',
+            'qualification',
+            'speciality',
+            'experience_years',
+            'hospital',
+            'city',
+            'languages_spoken',
+            'consultation_fee',
+            'available_from',
+            'available_to',
+            'rating',
+            'is_active',
+        ]
 
+        widgets = {
+            'available_from': forms.TimeInput(attrs={'type': 'time'}),
+            'available_to': forms.TimeInput(attrs={'type': 'time'}),
+        }
 class PatientRegistrationForm(UserCreationForm):
     phone = forms.CharField(required=False)
     city = forms.CharField(required=False)

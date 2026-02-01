@@ -43,10 +43,17 @@ urlpatterns = [
     path('assistant/api/', views.assistant_api, name='assistant_api'),
 
     # Admin quick actions for requests
-    path('admin/appointments/<int:pk>/status/', views.admin_update_appointment_status, name='admin_update_appointment_status'),
-    path('admin/medicine-orders/<int:pk>/status/', views.admin_update_medicine_order_status, name='admin_update_medicine_order_status'),
-    path('admin/oxygen-bookings/<int:pk>/status/', views.admin_update_oxygen_booking_status, name='admin_update_oxygen_booking_status'),
-    path('admin/bed-bookings/<int:pk>/status/', views.admin_update_bed_booking_status, name='admin_update_bed_booking_status'),
-    path('admin/support-requests/<int:pk>/status/', views.admin_update_support_request_status, name='admin_update_support_request_status'),
+    path('manage/appointments/<int:pk>/status/', views.admin_update_appointment_status, name='admin_update_appointment_status'),
+    path('manage/medicine-orders/<int:pk>/status/', views.admin_update_medicine_order_status, name='admin_update_medicine_order_status'),
+    path('manage/oxygen-bookings/<int:pk>/status/', views.admin_update_oxygen_booking_status, name='admin_update_oxygen_booking_status'),
+    path('manage/bed-bookings/<int:pk>/status/', views.admin_update_bed_booking_status, name='admin_update_bed_booking_status'),
+    path('manage/support-requests/<int:pk>/status/', views.admin_update_support_request_status, name='admin_update_support_request_status'),
+
+    # --- ADMIN MANAGEMENT: DOCTORS ---
+    path('manage/doctors/', views.manage_doctors, name='manage_doctors'),
+    path('manage/doctors/create/', views.create_doctor, name='create_doctor'),
+    path('manage/doctors/<int:pk>/edit/', views.edit_doctor, name='edit_doctor'),
+    path('manage/doctors/<int:pk>/toggle/', views.toggle_doctor_status, name='toggle_doctor_status'),
+
 ]
 
